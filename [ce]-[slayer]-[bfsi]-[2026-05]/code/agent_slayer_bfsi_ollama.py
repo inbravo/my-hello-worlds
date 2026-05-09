@@ -1,16 +1,17 @@
 """
-SLayer Hello World — Jaffle Shop demo via REST API, Ollama edition.
+BFSI Capital Adequacy Agent — Ollama edition (qwen2.5).
+
+Identical SLayer REST calls to agent_slayer_bfsi.py.
+Only the LLM client changes.
 
 Requires:
-  - SLayer running at http://127.0.0.1:5143:
-        uvx --from 'motley-slayer[all]' slayer serve --demo
-  - Ollama running at http://localhost:11434:
-        ollama serve
-        ollama pull qwen2.5
+  - SLayer running:  uvx --from 'motley-slayer[all]' slayer serve --demo
+  - Setup complete:  python setup_bfsi.py
+  - Ollama running:  ollama serve && ollama pull qwen2.5
 
 Usage:
-    python agent_slayer_ollama_hw.py
-    python agent_slayer_ollama_hw.py > trace.jsonl
+    python agent_slayer_bfsi_ollama.py
+    python agent_slayer_bfsi_ollama.py > trace.jsonl
 """
 
 import json
@@ -27,25 +28,34 @@ structlog.configure(
 )
 log = structlog.get_logger()
 
-SLAYER_BASE = "http://127.0.0.1:5143"
-MODEL_NAME  = "orders"
+SLAYER_BASE  = "http://127.0.0.1:5143"
+MODEL_NAME   = "capital_position"
+DS_NAME      = "capital_bfsi"
 OLLAMA_MODEL = "qwen2.5"
-QUESTION    = "What are the top 3 stores by total order revenue?"
+QUESTION     = (
+    "What is our current CET1 ratio and how does it compare"
+    " to the combined buffer requirement?"
+)
 
-# --- Discover model metadata from the running SLayer server ---
-model = requests.get(f"{SLAYER_BASE}/models/{MODEL_NAME}").json()
+# --- Discover model metadata ---
+model = requests.get(
+    f"{SLAYER_BASE}/models/{MODEL_NAME}",
+    params={"data_source": DS_NAME}
+).json()
 
-direct_columns = [c["name"] for c in model["columns"] if not c.get("hidden") and not c.get("primary_key")]
-joined_models  = [j["target_model"] for j in model.get("joins", [])]
+direct_columns = [
+    c["name"] for c in model["columns"]
+    if not c.get("hidden") and not c.get("primary_key")
+]
 time_dimension = model.get("default_time_dimension")
 
 log.info(
     "agent.start",
     question=QUESTION,
     slayer_model=MODEL_NAME,
+    data_source=DS_NAME,
     ollama_model=OLLAMA_MODEL,
     columns=direct_columns,
-    joins=joined_models,
 )
 
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
@@ -54,18 +64,16 @@ tools = [
     {
         "type": "function",
         "function": {
-            "name": "query_slayer",
+            "name": "query_capital_metrics",
             "description": (
-                f"Query the SLayer '{MODEL_NAME}' model. "
-                f"Direct columns available: {direct_columns}. "
-                f"Joined models (use dot notation for dimensions): {joined_models} — "
-                f"e.g. 'stores.name', 'customers.name'. "
+                f"Query the '{MODEL_NAME}' capital adequacy model via SLayer. "
+                f"Available columns: {direct_columns}. "
                 f"Default time dimension: '{time_dimension}'. "
-                "Measures use formula syntax: '*:count', 'order_total:sum', "
-                "'subtotal:avg', 'order_total:max'. "
-                "Filters use SQL syntax: \"ordered_at > '2024-06-01'\". "
-                "For order, reference the measure column name without colon: "
-                "'order_total_sum', 'count'."
+                "Use formula measures — '*:count', 'cet1_ratio_pct:max', "
+                "'combined_buffer:max', 'cet1_capital_mm:sum', 'rwa_mm:sum'. "
+                "Compute headroom inline: 'cet1_ratio_pct:max - combined_buffer:max'. "
+                "Filters use SQL syntax: \"reporting_date = '2026-03-31'\". "
+                "For order, use the measure name without colon: 'cet1_ratio_pct_max'."
             ),
             "parameters": {
                 "type": "object",
@@ -73,26 +81,26 @@ tools = [
                     "measures": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Formula measures, e.g. ['*:count', 'order_total:sum']",
+                        "description": "Formula measures, e.g. ['cet1_ratio_pct:max', 'combined_buffer:max']",
                     },
                     "dimensions": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Columns or joined fields, e.g. ['stores.name', 'ordered_at']",
+                        "description": "Columns to group by, e.g. ['reporting_date', 'entity']",
                     },
                     "filters": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "SQL-style filters, e.g. [\"ordered_at > '2024-01-01'\"]",
+                        "description": "SQL-style filters, e.g. [\"reporting_date = '2026-03-31'\"]",
                     },
                     "order": {
                         "type": "array",
                         "items": {"type": "object"},
-                        "description": "Sort order, e.g. [{\"column\": \"order_total_sum\", \"direction\": \"desc\"}]",
+                        "description": "Sort, e.g. [{\"column\": \"reporting_date\", \"direction\": \"desc\"}]",
                     },
                     "limit": {
                         "type": "integer",
-                        "description": "Maximum rows to return",
+                        "description": "Max rows to return",
                     },
                 },
                 "required": ["measures"],
@@ -120,21 +128,21 @@ tool_call = msg.tool_calls[0]
 params = json.loads(tool_call.function.arguments)
 log.info("slayer.query", **params)
 
-# SLayer REST API expects measures as {"formula": "..."} and dimensions as {"name": "..."}
 params["measures"]   = [{"formula": m} if isinstance(m, str) else m for m in params.get("measures", [])]
 params["dimensions"] = [{"name": d}    if isinstance(d, str) else d for d in params.get("dimensions", [])]
 
 query_payload = {"source_model": MODEL_NAME, **params}
 slayer_resp = requests.post(f"{SLAYER_BASE}/query", json=query_payload)
-
 if not slayer_resp.ok:
     log.error("slayer.error", status=slayer_resp.status_code, body=slayer_resp.text)
-
 slayer_resp.raise_for_status()
-result = slayer_resp.json()
 
-data = result.get("data", result)
+result = slayer_resp.json()
+data   = result.get("data", [])
+sql    = result.get("sql")
+
 log.info("slayer.result", rows=len(data), data=data)
+log.info("slayer.sql", sql=sql)
 
 # --- Turn 2: agent synthesises the answer ---
 t2_start = datetime.now(timezone.utc)
