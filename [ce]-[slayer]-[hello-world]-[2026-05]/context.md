@@ -9,34 +9,32 @@ knowledge:
 ## Engagement Summary
 
 - **Customer:** Internal — Impetus (reference architecture)
-- **Work:** Context Engineering hello-world — SLayer semantic layer variant
+- **Work:** Context Engineering — SLayer hello world via REST API
 - **Date:** 2026-05
-- **Objective:** Prove the semantic layer pattern — agent queries named metrics, not raw SQL; SLayer owns the translation
-- **Deliverables:** bootstrap.py, capital_db.yaml, capital_position.yaml, agent_slayer.py, README.md
+- **Objective:** Agent queries a running SLayer server (Jaffle Shop demo) via REST. No YAML authoring, no embedded engine. Proves the question → model discovery → SLayer query → answer loop.
+- **Deliverables:** agent_slayer_hw.py, README.md
 
 ## Stack
 
 | Layer | Tool |
 |---|---|
-| Data | DuckDB (`context_hw.duckdb`) |
-| Semantic Model | `models/capital_position.yaml` (SLayer YAML) |
-| Semantic Layer | motley-slayer Python API (local mode) |
+| Data | Jaffle Shop demo (built into SLayer) |
+| Semantic Layer | SLayer HTTP server at `http://127.0.0.1:5143` |
 | Agent | Claude via Anthropic SDK (tool use) |
 | Observability | structlog → console / `trace.jsonl` |
 
-## How This Differs from the Text-to-SQL Demo
+## Prerequisites
 
-In `[ce]-[hello-world]-[2026-05]`, the LLM reads a data contract and writes SQL.
-Here, the LLM calls named metrics (`buffer_headroom`, `latest_cet1_ratio`).
-SLayer owns the SQL translation. The agent never touches raw SQL.
+SLayer must be running before the agent starts:
+```bash
+uvx --from 'motley-slayer[all]' slayer serve --demo
+```
 
-## Run Order
+## Run
 
 ```bash
 cd code/
-pip install anthropic duckdb structlog pyyaml numpy pandas "motley-slayer[duckdb]"
+pip install anthropic requests structlog
 export ANTHROPIC_API_KEY=sk-ant-...
-python bootstrap.py          # once — seeds context_hw.duckdb
-python agent_slayer.py       # ask the question
-python agent_slayer.py > trace.jsonl  # capture the trace
+python agent_slayer_hw.py
 ```

@@ -1,3 +1,0 @@
-name: capital_db
-type: duckdb
-database: context_hw.duckdb
