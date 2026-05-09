@@ -1,0 +1,60 @@
+name: capital_position
+sql_table: capital_position
+data_source: capital_db
+description: >
+  Capital adequacy snapshot per legal entity and reporting date under Basel III/IV.
+  Contains CET1 capital, risk-weighted assets, CET1 ratios, and combined regulatory
+  buffer requirements. Use the named measures below — do not reference raw columns
+  directly when a measure already captures the metric you need.
+
+columns:
+  - name: reporting_date
+    sql:  reporting_date
+    type: time
+    description: Regulatory reporting date (quarter-end)
+
+  - name: entity
+    sql:  entity
+    type: string
+    description: Legal entity identifier
+
+  - name: cet1_capital_mm
+    sql:  cet1_capital_mm
+    type: number
+    description: Common Equity Tier 1 capital in millions GBP
+
+  - name: rwa_mm
+    sql:  rwa_mm
+    type: number
+    description: Risk-weighted assets in millions GBP
+
+  - name: cet1_ratio_pct
+    sql:  cet1_ratio_pct
+    type: number
+    description: CET1 ratio as a percentage (cet1_capital_mm / rwa_mm * 100)
+
+  - name: combined_buffer
+    sql:  combined_buffer
+    type: number
+    description: Combined buffer requirement as a percentage (CCB + G-SII + countercyclical)
+
+measures:
+  - name: latest_cet1_ratio
+    formula: "cet1_ratio_pct:max"
+    label: Latest CET1 Ratio (%)
+
+  - name: latest_combined_buffer
+    formula: "combined_buffer:max"
+    label: Latest Combined Buffer Requirement (%)
+
+  - name: buffer_headroom
+    formula: "cet1_ratio_pct:max - combined_buffer:max"
+    label: Buffer Headroom (percentage points above regulatory minimum)
+
+  - name: total_cet1_capital
+    formula: "cet1_capital_mm:sum"
+    label: Total CET1 Capital (millions GBP)
+
+  - name: total_rwa
+    formula: "rwa_mm:sum"
+    label: Total Risk-Weighted Assets (millions GBP)
