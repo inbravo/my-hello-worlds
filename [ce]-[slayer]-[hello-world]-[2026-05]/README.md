@@ -6,12 +6,15 @@ A five-component agentic loop using a **semantic layer** instead of raw SQL gene
 bootstrap.py                          — seed DuckDB (run once)
 models/datasources/capital_db.yaml    — DuckDB connection config
 models/capital_position.yaml          — SLayer semantic model with named measures
-agent_slayer.py                       — Claude agent querying metrics, not SQL
+agent_slayer.py                       — Option A: Claude via Anthropic SDK
+agent_slayer_ollama.py                — Option B: same loop via local Ollama (qwen2.5)
 ```
 
 ---
 
 ## Quick Start
+
+**Option A — Anthropic (cloud):**
 
 ```bash
 # 1. Clone and move into the code folder
@@ -32,6 +35,32 @@ python agent_slayer.py
 
 # 6. Capture the full trace to a file
 python agent_slayer.py > trace.jsonl
+```
+
+**Option B — Ollama (local, no API key needed):**
+
+```bash
+# 1. Install and start Ollama
+brew install ollama && ollama serve
+
+# 2. Pull qwen2.5 (tool-capable model)
+ollama pull qwen2.5
+
+# 3. Clone and move into the code folder
+git clone https://github.com/inbravo/my-hello-worlds
+cd my-hello-worlds/[ce]-[slayer]-[hello-world]-[2026-05]/code
+
+# 4. Install dependencies
+pip install openai duckdb structlog pyyaml numpy pandas "motley-slayer[duckdb]"
+
+# 5. Seed the database (run once)
+python bootstrap.py
+
+# 6. Run the agent
+python agent_slayer_ollama.py
+
+# 7. Capture the full trace to a file
+python agent_slayer_ollama.py > trace.jsonl
 ```
 
 ---
@@ -161,21 +190,63 @@ The key step is that the agent's tool description is **generated from the model 
 
 ---
 
+## Two Options: Anthropic or Ollama
+
+The SLayer semantic layer is identical in both agents. Only the LLM client changes.
+
+| | **Option A — Anthropic (cloud)** | **Option B — Ollama (local)** |
+|---|---|---|
+| Script | `agent_slayer.py` | `agent_slayer_ollama.py` |
+| LLM | `claude-sonnet-4-6` | `qwen2.5` (default) |
+| Runs on | Anthropic's API | Your machine |
+| Requires | API key + internet | Ollama installed + model pulled |
+| Cost | Per-token billing | Free |
+| Privacy | Data leaves your machine | Fully local |
+| SLayer behaviour | Identical | Identical |
+
+---
+
 ## Prerequisites
 
 - Python 3.10+
-- An Anthropic API key — [console.anthropic.com](https://console.anthropic.com)
+- **Option A:** Anthropic API key — [console.anthropic.com](https://console.anthropic.com)
+- **Option B:** [Ollama](https://ollama.com) installed and running locally
 
 ---
 
 ## Installation
 
+### Common dependencies (both options)
+
 ```bash
-pip install anthropic duckdb structlog pyyaml numpy pandas "motley-slayer[duckdb]"
-export ANTHROPIC_API_KEY=sk-ant-...
+pip install duckdb structlog pyyaml numpy pandas "motley-slayer[duckdb]"
 ```
 
 The `[duckdb]` extra installs the DuckDB driver for SLayer alongside the core package.
+
+### Option A — Anthropic
+
+```bash
+pip install anthropic
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+### Option B — Ollama
+
+```bash
+# Install and start Ollama (macOS)
+brew install ollama
+ollama serve          # starts the local server at http://localhost:11434
+
+# Install the Python client
+pip install openai    # Ollama uses an OpenAI-compatible endpoint
+
+# Pull a tool-capable model
+ollama pull qwen2.5        # recommended — tested
+ollama pull llama3.1       # solid alternative
+ollama pull mistral-nemo   # lightweight option
+ollama pull command-r      # strong on retrieval-style tasks
+```
 
 ---
 
@@ -209,13 +280,25 @@ Seeded capital_position: 3 rows → context_hw.duckdb
 
 ---
 
-### Step 2 — Run the agent
+### Step 2A — Run with Anthropic (cloud)
 
 ```bash
 python agent_slayer.py
 ```
 
-The agent reads the semantic model, discovers available measures, and builds its tool definition dynamically. You'll see structured JSON logs as it works through both turns, then the answer:
+### Step 2B — Run with Ollama (local)
+
+Confirm the model at the top of `agent_slayer_ollama.py` matches what you pulled:
+
+```python
+MODEL = "qwen2.5"   # change to llama3.1, mistral-nemo, command-r, etc.
+```
+
+```bash
+python agent_slayer_ollama.py
+```
+
+Both agents read the semantic model, discover available measures, and build their tool definition dynamically. Output format is identical:
 
 ```
 ============================================================
@@ -231,7 +314,8 @@ minimum.
 ### Step 3 — Capture the trace
 
 ```bash
-python agent_slayer.py > trace.jsonl
+python agent_slayer.py > trace.jsonl          # Option A
+python agent_slayer_ollama.py > trace.jsonl   # Option B
 ```
 
 The trace shows the full chain — question, metric names requested, SLayer query, result, answer:
@@ -282,7 +366,8 @@ Run the agent again. The new measure appears automatically in the tool descripti
 | Datasource config | `models/datasources/capital_db.yaml` | DuckDB connection |
 | Semantic model | `models/capital_position.yaml` | Named measures + column definitions |
 | Semantic layer | motley-slayer Python API (local mode) | In-process, no server required |
-| Agent | Claude via Anthropic SDK | `claude-sonnet-4-6` |
+| Agent (cloud) | Claude via Anthropic SDK | `agent_slayer.py` — `claude-sonnet-4-6` |
+| Agent (local) | Ollama via OpenAI-compatible API | `agent_slayer_ollama.py` — `qwen2.5` default |
 | Observability | structlog | JSON to console; pipe to `.jsonl` |
 
 ---
@@ -320,10 +405,21 @@ The agent code is identical. Only the client initialisation changes.
 
 ## Switching the LLM Model
 
-Edit the `model` argument in `agent_slayer.py`:
+**Option A — Anthropic:** edit the `model` argument in `agent_slayer.py`:
 
 ```python
 model="claude-sonnet-4-6"          # balanced — default
 model="claude-opus-4-7"            # more capable, higher cost
 model="claude-haiku-4-5-20251001"  # fastest, lowest cost
 ```
+
+**Option B — Ollama:** edit the `MODEL` constant in `agent_slayer_ollama.py`:
+
+```python
+MODEL = "qwen2.5"        # recommended — tested
+MODEL = "llama3.1"       # reliable alternative
+MODEL = "mistral-nemo"   # lightweight, fast on CPU
+MODEL = "command-r"      # strong on retrieval-style tasks
+```
+
+Any Ollama model with tool/function-calling support works. Check [ollama.com/search](https://ollama.com/search) and filter by **Tools**.
