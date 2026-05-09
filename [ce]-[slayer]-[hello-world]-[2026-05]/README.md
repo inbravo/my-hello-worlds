@@ -3,14 +3,29 @@
 An AI agent that queries a live SLayer semantic layer via REST. No YAML authoring, no embedded engine. The agent discovers the data model at startup, builds its own tool description, and answers a business question in two turns.
 
 ```
-agent_slayer_hw.py   — the entire demo, one file
+agent_slayer_hw.py         — Option A: Claude via Anthropic SDK
+agent_slayer_ollama_hw.py  — Option B: same loop via local Ollama (qwen2.5)
 ```
+
+---
+
+## Two Options: Anthropic or Ollama
+
+The SLayer REST calls are identical in both agents. Only the LLM client changes.
+
+| | **Option A — Anthropic (cloud)** | **Option B — Ollama (local)** |
+|---|---|---|
+| Script | `agent_slayer_hw.py` | `agent_slayer_ollama_hw.py` |
+| LLM | `claude-sonnet-4-6` | `qwen2.5` (default) |
+| Requires | API key + internet | Ollama running locally |
+| Cost | Per-token | Free |
+| SLayer calls | Identical | Identical |
 
 ---
 
 ## Quick Start
 
-**1. Start SLayer with the Jaffle Shop demo:**
+**Step 1 — Start SLayer (required for both options):**
 
 ```bash
 uvx --from 'motley-slayer[all]' slayer serve --demo
@@ -18,7 +33,7 @@ uvx --from 'motley-slayer[all]' slayer serve --demo
 
 SLayer starts at `http://127.0.0.1:5143` and preloads the Jaffle Shop dataset — orders, customers, stores, products, and more.
 
-**2. In a separate terminal, run the agent:**
+**Step 2A — Run with Anthropic (new terminal):**
 
 ```bash
 cd code/
@@ -27,10 +42,23 @@ export ANTHROPIC_API_KEY=sk-ant-...
 python agent_slayer_hw.py
 ```
 
-**3. Capture the trace:**
+**Step 2B — Run with Ollama (new terminal):**
 
 ```bash
-python agent_slayer_hw.py > trace.jsonl
+# Start Ollama and pull the model (once)
+ollama serve
+ollama pull qwen2.5
+
+cd code/
+pip install openai requests structlog
+python agent_slayer_ollama_hw.py
+```
+
+**Step 3 — Capture the trace:**
+
+```bash
+python agent_slayer_hw.py > trace.jsonl          # Option A
+python agent_slayer_ollama_hw.py > trace.jsonl   # Option B
 ```
 
 ---
@@ -134,6 +162,21 @@ The agent re-discovers the model metadata automatically — no other changes nee
 
 ---
 
+## Switching the Ollama Model
+
+Edit `OLLAMA_MODEL` at the top of `agent_slayer_ollama_hw.py`:
+
+```python
+OLLAMA_MODEL = "qwen2.5"       # recommended — tested
+OLLAMA_MODEL = "llama3.1"      # solid alternative
+OLLAMA_MODEL = "mistral-nemo"  # lightweight
+OLLAMA_MODEL = "command-r"     # strong on retrieval tasks
+```
+
+Any Ollama model with tool/function-calling support works. Check [ollama.com/search](https://ollama.com/search) and filter by **Tools**.
+
+---
+
 ## Stack
 
 | Layer | Component |
@@ -141,7 +184,8 @@ The agent re-discovers the model metadata automatically — no other changes nee
 | Data | Jaffle Shop (SLayer built-in demo) |
 | Semantic Layer | SLayer HTTP server — `http://127.0.0.1:5143` |
 | Query | `POST /query` with formula measures + dimensions |
-| Agent | Claude (`claude-sonnet-4-6`) via Anthropic SDK |
+| Agent (cloud) | Claude (`claude-sonnet-4-6`) via Anthropic SDK |
+| Agent (local) | Ollama (`qwen2.5`) via OpenAI-compatible endpoint |
 | Observability | structlog — JSON to console, pipe to `.jsonl` |
 
 ---
