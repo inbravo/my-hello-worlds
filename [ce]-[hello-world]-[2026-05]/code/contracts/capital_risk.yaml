@@ -1,0 +1,40 @@
+name: capital_risk
+version: "1.0"
+description: Capital adequacy metrics under the Basel III/IV framework
+owner: treasury.risk@bank.com
+
+tables:
+  - name: capital_position
+    description: >
+      Daily capital adequacy snapshot per legal entity and reporting date.
+      Contains CET1 capital ratios, risk-weighted assets (RWA), and the
+      combined regulatory buffer requirement (CCB + G-SII + countercyclical).
+      Query this table to assess capital adequacy, buffer headroom, or CET1
+      ratio trends across quarters.
+    columns:
+      - name: reporting_date
+        type: DATE
+        description: Regulatory reporting date (typically quarter-end)
+      - name: entity
+        type: VARCHAR
+        description: Legal entity identifier
+      - name: cet1_capital_mm
+        type: DECIMAL(18,2)
+        description: Common Equity Tier 1 capital in millions GBP
+      - name: rwa_mm
+        type: DECIMAL(18,2)
+        description: Risk-weighted assets in millions GBP
+      - name: cet1_ratio_pct
+        type: DECIMAL(6,4)
+        description: CET1 ratio as percentage (cet1_capital_mm / rwa_mm * 100)
+      - name: combined_buffer
+        type: DECIMAL(6,4)
+        description: Combined buffer requirement as percentage (CCB + G-SII + countercyclical)
+
+lineage:
+  source_systems:
+    - name: core_banking
+      type: operational
+  source_scripts:
+    - bootstrap.py
+  refresh_cadence: quarterly
