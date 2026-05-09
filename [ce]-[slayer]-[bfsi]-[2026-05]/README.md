@@ -13,9 +13,25 @@ agent_slayer_bfsi_ollama.py  — Option B: same loop via Ollama (qwen2.5)
 
 ## Quick Start
 
+**Step 0 — Install SLayer with DuckDB support:**
+
+```bash
+pip install 'motley-slayer[all]'
+```
+
+> `[all]` includes the DuckDB adapter required for registering a custom DuckDB datasource.  
+> Alternatively, use `uvx` (part of [`uv`](https://docs.astral.sh/uv/)) which installs and runs SLayer in one command — no separate install needed:
+> ```bash
+> pip install uv
+> ```
+
 **Step 1 — Start SLayer (keep this terminal running):**
 
 ```bash
+# Option A — if installed via pip:
+slayer serve --demo
+
+# Option B — via uvx (installs on first run):
 uvx --from 'motley-slayer[all]' slayer serve --demo
 ```
 

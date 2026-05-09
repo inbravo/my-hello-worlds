@@ -25,9 +25,25 @@ The SLayer REST calls are identical in both agents. Only the LLM client changes.
 
 ## Quick Start
 
+**Step 0 — Install SLayer with DuckDB support:**
+
+```bash
+pip install 'motley-slayer[all]'
+```
+
+> `[all]` includes the DuckDB adapter.  
+> Alternatively, use `uvx` (part of [`uv`](https://docs.astral.sh/uv/)) which installs and runs SLayer in one command — no separate install needed:
+> ```bash
+> pip install uv
+> ```
+
 **Step 1 — Start SLayer (required for both options):**
 
 ```bash
+# Option A — if installed via pip:
+slayer serve --demo
+
+# Option B — via uvx (installs on first run):
 uvx --from 'motley-slayer[all]' slayer serve --demo
 ```
 
