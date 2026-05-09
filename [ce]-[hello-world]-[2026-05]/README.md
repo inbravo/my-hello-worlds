@@ -108,10 +108,10 @@ points above the minimum threshold.
 
 ### Step 2b — Run the Ollama agent
 
-Set the model at the top of `agent_ollama.py` (default: `llama3.1`):
+Set the model at the top of `agent_ollama.py` (default: `qwen2.5`):
 
 ```python
-MODEL = "llama3.1"   # change to qwen2.5, mistral-nemo, command-r, etc.
+MODEL = "qwen2.5"   # change to llama3.1, mistral-nemo, command-r, etc.
 ```
 
 ```bash
@@ -176,3 +176,22 @@ MODEL = "llama3.1"   # or qwen2.5, mistral-nemo, command-r
 ```
 
 Any Ollama model with tool/function-calling support works. Check [ollama.com/search](https://ollama.com/search) and filter by **Tools**.
+
+---
+
+## Sample Output (qwen2.5)
+
+```bash
+(.venv) inbravo@IMUL-ML0515 code % python agent_ollama.py
+{"question": "What is our current CET1 ratio and how does it compare to the combined buffer requirement?", "contract": "capital_risk", "model": "qwen2.5", "event": "agent.start", "timestamp": "2026-05-09T09:36:14.911277Z"}
+{"stop_reason": "tool_calls", "latency_ms": 16753, "event": "agent.turn1", "timestamp": "2026-05-09T09:36:32.149875Z"}
+{"raw_args": {"sql": "SELECT cet1_ratio_pct, combined_buffer FROM capital_position ORDER BY reporting_date DESC LIMIT 1;"}, "event": "tool.args", "timestamp": "2026-05-09T09:36:32.150196Z"}
+{"tool": "query_capital_position", "sql": "SELECT cet1_ratio_pct, combined_buffer FROM capital_position ORDER BY reporting_date DESC LIMIT 1;", "event": "tool.call", "timestamp": "2026-05-09T09:36:32.150249Z"}
+{"rows": 1, "data": [{"cet1_ratio_pct": 14.83, "combined_buffer": 9.75}], "event": "tool.result", "timestamp": "2026-05-09T09:36:41.054748Z"}
+{"latency_ms": 5539, "lineage_source": ["bootstrap.py"], "event": "agent.answer", "timestamp": "2026-05-09T09:36:46.594115Z"}
+
+============================================================
+Based on the most recent data, our current CET1 ratio is 14.83%, while the combined buffer
+requirement stands at 9.75%. Buffer headroom: 5.08 percentage points.
+============================================================
+```

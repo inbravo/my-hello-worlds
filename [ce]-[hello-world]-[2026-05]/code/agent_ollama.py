@@ -21,7 +21,7 @@ QUESTION = (
     "What is our current CET1 ratio and how does it compare"
     " to the combined buffer requirement?"
 )
-MODEL = "llama3.1"  # any tool-capable Ollama model: qwen2.5, mistral-nemo, command-r
+MODEL = "qwen2.5"  # any tool-capable Ollama model: llama3.1, qwen2.5, mistral-nemo, command-r
 
 log.info("agent.start", question=QUESTION, contract=contract["name"], model=MODEL)
 
@@ -38,7 +38,12 @@ tools = [
                 "properties": {
                     "sql": {
                         "type": "string",
-                        "description": "SQL query against the capital_position table",
+                        "description": (
+                            "SQL query against the capital_position table. "
+                            "Available columns: reporting_date (DATE), entity (VARCHAR), "
+                            "cet1_capital_mm (DECIMAL), rwa_mm (DECIMAL), "
+                            "cet1_ratio_pct (DECIMAL), combined_buffer (DECIMAL)."
+                        ),
                     }
                 },
                 "required": ["sql"],
@@ -63,7 +68,11 @@ log.info(
 
 # --- Tool execution: DuckDB ---
 tool_call = msg.tool_calls[0]
-sql = json.loads(tool_call.function.arguments)["sql"]
+args = json.loads(tool_call.function.arguments)
+log.info("tool.args", raw_args=args)  # debug: see actual keys returned
+
+# Fallback: pick first value if 'sql' key is missing
+sql = args.get("sql") or args.get("query") or next(iter(args.values()))
 log.info("tool.call", tool=tool_call.function.name, sql=sql)
 
 db = duckdb.connect("context_hw.duckdb", read_only=True)
