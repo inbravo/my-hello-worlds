@@ -124,7 +124,15 @@ log.info("slayer.query", **params)
 params["measures"]   = [{"formula": m} if isinstance(m, str) else m for m in params.get("measures", [])]
 params["dimensions"] = [{"name": d}    if isinstance(d, str) else d for d in params.get("dimensions", [])]
 
+# Remove 'order' if no dimensions — Slayer can't order without dimensions
+if not params.get("dimensions"):
+    params.pop("order", None)
+# Also remove empty filters
+if not params.get("filters"):
+    params.pop("filters", None)
+
 query_payload = {"source_model": MODEL_NAME, **params}
+log.info("slayer.payload", payload=query_payload)  # confirm what is actually sent
 slayer_resp = requests.post(f"{SLAYER_BASE}/query", json=query_payload)
 
 if not slayer_resp.ok:

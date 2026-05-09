@@ -123,6 +123,13 @@ log.info(
     latency_ms=int((datetime.now(timezone.utc) - t1_start).total_seconds() * 1000),
 )
 
+if not msg.tool_calls:
+    # Model answered directly without using a tool
+    print("\n" + "=" * 60)
+    print(msg.content)
+    print("=" * 60)
+    exit(0)
+
 # --- Tool execution: POST to SLayer REST API ---
 tool_call = msg.tool_calls[0]
 params = json.loads(tool_call.function.arguments)
@@ -131,8 +138,17 @@ log.info("slayer.query", **params)
 params["measures"]   = [{"formula": m} if isinstance(m, str) else m for m in params.get("measures", [])]
 params["dimensions"] = [{"name": d}    if isinstance(d, str) else d for d in params.get("dimensions", [])]
 
+# Remove 'order' if no dimensions — Slayer can't order without dimensions
+if not params.get("dimensions"):
+    params.pop("order", None)
+# Also remove empty filters
+if not params.get("filters"):
+    params.pop("filters", None)
+
 query_payload = {"source_model": MODEL_NAME, **params}
+log.info("slayer.payload", payload=query_payload)  # THIS LINE confirms the fix is active
 slayer_resp = requests.post(f"{SLAYER_BASE}/query", json=query_payload)
+
 if not slayer_resp.ok:
     log.error("slayer.error", status=slayer_resp.status_code, body=slayer_resp.text)
 slayer_resp.raise_for_status()
