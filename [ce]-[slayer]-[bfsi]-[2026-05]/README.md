@@ -175,3 +175,20 @@ QUESTION = "How do our risk-weighted assets compare quarter over quarter?"
 | Agent (cloud) | Claude (`claude-sonnet-4-6`) via Anthropic SDK |
 | Agent (local) | Ollama (`qwen2.5`) via OpenAI-compatible endpoint |
 | Observability | structlog — logs metric request, result, and generated SQL |
+
+## Sample Output (qwen2.5 via Ollama)
+
+```bash
+(.venv) inbravo@IMUL-ML0515 code % python agent_slayer_bfsi_ollama.py
+{"question": "What is our current CET1 ratio and how does it compare to the combined buffer requirement?", "slayer_model": "capital_position", "data_source": "capital_bfsi", "ollama_model": "qwen2.5", "columns": ["reporting_date", "entity", "cet1_capital_mm", "rwa_mm", "cet1_ratio_pct", "combined_buffer"], "event": "agent.start", "timestamp": "2026-05-09T21:55:40.062442Z"}
+{"stop_reason": "tool_calls", "latency_ms": 2262, "event": "agent.turn1", "timestamp": "2026-05-09T21:55:42.352287Z"}
+{"measures": ["cet1_ratio_pct:max", "combined_buffer:max"], "dimensions": [], "filters": [], "event": "slayer.query", "timestamp": "2026-05-09T21:55:42.352433Z"}
+{"payload": {"source_model": "capital_position", "measures": [{"formula": "cet1_ratio_pct:max"}, {"formula": "combined_buffer:max"}], "dimensions": []}, "event": "slayer.payload", "timestamp": "2026-05-09T21:55:42.352470Z"}
+{"rows": 1, "data": [{"capital_position.cet1_ratio_pct_max": "14.8300", "capital_position.combined_buffer_max": "9.7500"}], "event": "slayer.result", "timestamp": "2026-05-09T21:55:42.375492Z"}
+{"sql": null, "event": "slayer.sql", "timestamp": "2026-05-09T21:55:42.375532Z"}
+{"latency_ms": 3507, "event": "agent.answer", "timestamp": "2026-05-09T21:55:45.883158Z"}
+
+============================================================
+Our current CET1 ratio is 14.83%, while the combined buffer requirement stands at 9.75%. This means we have a headroom of 5.08% (14.83% - 9.75%) above the regulatory requirements based on the latest reported data.
+============================================================
+```
