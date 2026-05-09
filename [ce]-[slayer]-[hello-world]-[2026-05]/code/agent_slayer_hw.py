@@ -111,8 +111,15 @@ tool_call = next(b for b in response.content if b.type == "tool_use")
 params = tool_call.input
 log.info("slayer.query", **params)
 
+# SLayer REST API expects measures as {"formula": "..."} and dimensions as {"name": "..."}
+params = dict(params)
+params["measures"]   = [{"formula": m} if isinstance(m, str) else m for m in params.get("measures", [])]
+params["dimensions"] = [{"name": d}    if isinstance(d, str) else d for d in params.get("dimensions", [])]
+
 query_payload = {"source_model": MODEL_NAME, **params}
 slayer_resp = requests.post(f"{SLAYER_BASE}/query", json=query_payload)
+if not slayer_resp.ok:
+    log.error("slayer.error", status=slayer_resp.status_code, body=slayer_resp.text)
 slayer_resp.raise_for_status()
 result = slayer_resp.json()
 
