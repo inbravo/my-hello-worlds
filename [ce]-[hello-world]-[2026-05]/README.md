@@ -11,6 +11,55 @@ agent_ollama.py              — Option B: same loop via local Ollama
 
 ---
 
+## Quick Start
+
+**Option A — Anthropic (cloud):**
+
+```bash
+# 1. Clone and move into the code folder
+git clone https://github.com/inbravo/my-hello-worlds
+cd my-hello-worlds/[ce]-[hello-world]-[2026-05]/code
+
+# 2. Install dependencies
+pip install anthropic duckdb structlog pyyaml numpy pandas
+
+# 3. Set your Anthropic API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# 4. Seed the database (run once)
+python bootstrap.py
+
+# 5. Run the agent
+python agent.py
+
+# 6. Capture the full trace to a file
+python agent.py > trace.jsonl
+```
+
+**Option B — Ollama (local, no API key needed):**
+
+```bash
+# 1. Install and start Ollama
+brew install ollama && ollama serve
+
+# 2. Pull a tool-capable model
+ollama pull qwen2.5
+
+# 3. Install dependencies
+pip install openai duckdb structlog pyyaml numpy pandas
+
+# 4. Seed the database (run once)
+python bootstrap.py
+
+# 5. Run the agent
+python agent_ollama.py
+
+# 6. Capture the full trace to a file
+python agent_ollama.py > trace.jsonl
+```
+
+---
+
 ## The Banking Use Case
 
 Under Basel III/IV, every bank must hold Common Equity Tier 1 (CET1) capital above a regulatory floor made up of several stacked buffers:

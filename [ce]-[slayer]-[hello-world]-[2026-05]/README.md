@@ -11,6 +11,31 @@ agent_slayer.py                       — Claude agent querying metrics, not SQL
 
 ---
 
+## Quick Start
+
+```bash
+# 1. Clone and move into the code folder
+git clone https://github.com/inbravo/my-hello-worlds
+cd my-hello-worlds/[ce]-[slayer]-[hello-world]-[2026-05]/code
+
+# 2. Install dependencies
+pip install anthropic duckdb structlog pyyaml numpy pandas "motley-slayer[duckdb]"
+
+# 3. Set your Anthropic API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# 4. Seed the database (run once)
+python bootstrap.py
+
+# 5. Run the agent
+python agent_slayer.py
+
+# 6. Capture the full trace to a file
+python agent_slayer.py > trace.jsonl
+```
+
+---
+
 ## Why This Exists
 
 The [text-to-SQL hello world](../[ce]-[hello-world]-[2026-05]/README.md) in this repo proves the agent can generate correct SQL from a data contract. This demo takes the next step: the agent doesn't generate SQL at all. It asks for metrics by name. SLayer owns the translation.
