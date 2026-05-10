@@ -1,8 +1,10 @@
 # My Hello Worlds: My first interaction to a technical solution
-This repo contains various "Hello World" catagory of applications
+
+This repo contains various "Hello World" examples demonstrating **Context Engineering (CE)** — the discipline of designing, structuring, and governing business context delivered to LLMs so they reason and act correctly on your data.
 
 ## Semantics and Context Engineering
-If you have understood the purpose of the Semantic layer, Context Engineering follows naturally — it is the discipline of designing, structuring, and governing the business context delivered to the LLM, at the right time and in the right format, so it reasons and acts correctly on your data. CE is not a one-time activity. The outcome it continuously produces and maintains is the semantic layer itself — a living, structured representation of the business meaning of customer data. Put simply:— good Context Engineering produces good semantics. 
+
+If you have understood the purpose of the Semantic layer, Context Engineering follows naturally — it is the discipline of designing, structuring, and governing the business context delivered to the LLM, at the right time and in the right format, so it reasons and acts correctly on your data. CE is not a one-time activity. The outcome it continuously produces and maintains is the semantic layer itself — a living, structured representation of the business meaning of customer data. Put simply: **good Context Engineering produces good semantics.**
 
 Semantic is a broader term including these components:
 
@@ -18,7 +20,7 @@ Semantic is a broader term including these components:
 
 ---
 
-**How they relate**
+**How they relate:**
 
 - A **data contract** says: *"this table exists, has these columns, owned by this team, refreshed daily"*
 - An **ontology** says: *"CET1 Capital is a subclass of Regulatory Capital, which is governed by Basel III"*
@@ -28,33 +30,174 @@ Semantic is a broader term including these components:
 
 ---
 
-## There are two Hello World Examples on Context Engineering
+## Repository Structure
 
-#### **Example 1 using Data Contract-based Semantic Layer (Component 1)**
-  A small but complete demo that gives you a basic idea of Context Engineering. This demo makes the concept tangible in under five minutes. I have tried to keep it simple for easy understanding.
-  For those who are already ahead in CE, this demo won’t matter much, but for anybody still in the initial learning phase, this example will help you understand why CE matters
+This repository contains **three main examples** organized in separate folders:
 
-  What it shows
-  - Clients have "AI agents." Context engineering is the missing piece — it's the discipline of giving the LLM precisely the right context, in a structured and governed way, so it acts correctly on your data.
-  - A bank's capital reporting team gets asked the same questions every quarter: What's our current CET1 ratio? How much buffer headroom do we have?* The data is in a table. The friction is in writing and maintaining SQL against a schema that changes with every regulatory update.
-  - This demo replaces that friction. An AI agent reads a data contract — a YAML file that describes what the data means in plain English — then writes its own SQL, queries a DuckDB database, and returns a clear answer. No hardcoded prompts. No vector store. No custom fine-tuning. Just a structured contract and a two-turn agent loop.
+### 📂 Directory Listing
 
-Two ways to run it: Claude (via the Anthropic API) or any local model via Ollama. Get it running in four commands
-1.	git clone https://github.com/inbravo/my-hello-worlds
-2.	cd my-hello-worlds/\[ce\]-\[hello-world\]-\[2026-05\]/code
-3.	pip install duckdb structlog pyyaml numpy pandas anthropic 
-4.	python bootstrap.py && python agent.py
+- **`[ce]-[hello-world]-[2026-05]`** - Context Engineering demo using Data Contract-based Semantic Layer (Component 1)
+- **`[ce]-[slayer]-[bfsi]-[2026-05]`** - Banking, Financial Services & Insurance (BFSI) example using MCP-compatible Semantic Layer (Component 3)
+- **`[ce]-[slayer]-[hello-world]-[2026-05]`** - Additional Slayer framework examples
 
+---
 
-#### **Example 2 using MCP-compatible Semantic Layer (Component 3)**
-  A Second Example that brings the CE example closer to a real production pattern. Instead of a YAML data contract, it uses a proper running semantic model ( using slayer ) that the agent discovers and queries via the MCP/REST API. The agent never writes SQL; the   semantic layer compiles it. The same semantic layer can be wired directly into any agent. A governed, schema-aware layer that sits between the agent and the data, translating the business story into agentic language. 
+## 🎯 Overview of Examples
 
-Full walkthrough in the README, including the Ollama or Anthropic API options. To run the second demo fully local:
-1.	git clone https://github.com/inbravo/my-hello-worlds
-2.	uvx --from 'motley-slayer[all]' slayer serve --demo
-3.	ollama serve && ollama pull qwen2.5
-4.	cd my-hello-worlds/[ce]-[slayer]-[bfsi]-[2026-05]/code
-5.	pip install openai requests duckdb structlog ‘motley-slayer[all]’
-6.	python bootstrap_bfsi.py && python setup_bfsi.py && python agent_slayer_bfsi_ollama.py
+### Example 1: Data Contract-based Semantic Layer (Component 1)
 
+**What it shows:**
+- Clients have "AI agents." Context engineering is the missing piece — it's the discipline of giving the LLM precisely the right context, in a structured and governed way, so it acts correctly on your data.
+- A bank's capital reporting team gets asked the same questions every quarter: *What's our current CET1 ratio? How much buffer headroom do we have?* The data is in a table. The friction is in writing and maintaining SQL against a schema that changes with every regulatory update.
+- This demo replaces that friction. An AI agent reads a data contract — a YAML file that describes what the data means in plain English — then writes its own SQL, queries a DuckDB database, and returns a clear answer. No hardcoded prompts. No vector store. No custom fine-tuning. Just a structured contract and a two-turn agent loop.
 
+**Quick Start (4 commands):**
+```bash
+git clone https://github.com/inbravo/my-hello-worlds
+cd my-hello-worlds/[ce]-[hello-world]-[2026-05]/code
+pip install duckdb structlog pyyaml numpy pandas anthropic 
+python bootstrap.py && python agent.py
+```
+
+**Options:** Use Claude via Anthropic API or any local model via Ollama
+
+---
+
+### Example 2: MCP-compatible Semantic Layer (Component 3) - BFSI
+
+**What it shows:**
+- A production-grade pattern that brings Context Engineering closer to real-world scenarios. Instead of a YAML data contract, it uses a proper running semantic model (using Slayer) that the agent discovers and queries via the MCP/REST API.
+- The agent never writes SQL; the semantic layer compiles it. The same semantic layer can be wired directly into any agent. A governed, schema-aware layer that sits between the agent and the data, translating the business story into agentic language.
+
+**Quick Start (fully local):**
+```bash
+git clone https://github.com/inbravo/my-hello-worlds
+uvx --from 'motley-slayer[all]' slayer serve --demo
+ollama serve && ollama pull qwen2.5
+cd my-hello-worlds/[ce]-[slayer]-[bfsi]-[2026-05]/code
+pip install openai requests duckdb structlog 'motley-slayer[all]'
+python bootstrap_bfsi.py && python setup_bfsi.py && python agent_slayer_bfsi_ollama.py
+```
+
+**Options:** Use Anthropic API or Ollama for local inference
+
+---
+
+## � Next Steps & Learning Path
+
+After running the examples, here's how to deepen your understanding:
+
+### Learning Progression
+
+1. **Start with Example 1** (Data Contracts)
+   - Understand how YAML contracts describe data semantics
+   - Experiment with modifying the contract and observing agent behavior changes
+   - Explore how the agent generates its own SQL
+
+2. **Move to Example 2** (MCP Semantic Layer)
+   - Learn how REST APIs expose semantic models
+   - Understand the difference between agent-driven SQL vs semantic layer compilation
+   - Experiment with different business questions
+
+3. **Extend the Examples**
+   - Add new tables or domains to the DuckDB database
+   - Modify the YAML contracts to add new business rules
+   - Integrate with your own LLM or inference engine
+   - Add new metrics to the Slayer semantic model
+
+### Customization Ideas
+
+- **Add custom domains** beyond BFSI (healthcare, e-commerce, supply chain)
+- **Change the LLM** - swap Anthropic Claude for OpenAI GPT or local models
+- **Add multi-turn conversations** - extend agents for complex dialogues
+- **Implement monitoring** - add logging to track agent decisions and SQL generation
+- **Connect real databases** - replace DuckDB with PostgreSQL, Snowflake, or BigQuery
+
+---
+
+## 🏗️ Architecture
+
+### Example 1: Data Contract Flow
+
+```
+┌──────────────┐
+│  Data        │
+│  Contract    │  (YAML)
+│  (Semantic)  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────┐        ┌─────────────┐
+│   LLM Agent      │◄──────►│  DuckDB     │
+│  (generates SQL) │        │ (executes)  │
+└──────┬───────────┘        └─────────────┘
+       │
+       ▼
+ ┌───────────────┐
+ │ Business      │
+ │ Answer        │
+ └───────────────┘
+```
+
+### Example 2: MCP Semantic Layer Flow
+
+```
+┌──────────────────┐
+│  Business Query  │
+│   (plain text)   │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│   LLM Agent      │
+│ (understands Q)  │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────────────┐
+│   Slayer Semantic Model  │  (MCP/REST API)
+│  (discovers entities)    │
+└──────┬───────────────────┘
+       │
+       ▼
+┌──────────────────┐        ┌─────────────┐
+│  Semantic Layer  │◄──────►│   Data      │
+│  (compiles SQL)  │        │ (database)  │
+└──────┬───────────┘        └─────────────┘
+       │
+       ▼
+ ┌───────────────┐
+ │ Governed      │
+ │ Answer        │
+ └───────────────┘
+```
+
+**Key Difference:** In Example 1, the agent writes SQL. In Example 2, the semantic layer compiles SQL based on business metrics—more controlled, auditable, and reliable.
+
+---
+
+## 📚 Glossary & Terminology
+
+| Term | Definition |
+|------|-----------|
+| **AI Agent** | An autonomous system that understands natural language questions and takes actions (writing SQL, querying data, reasoning) to find answers. |
+| **Context Engineering (CE)** | The discipline of structuring and governing business context so LLMs reason correctly on your data. |
+| **Data Contract** | A YAML or JSON file that documents what a dataset means, who owns it, SLAs, freshness, and lineage. Bridges semantic and technical layers. |
+| **DuckDB** | An in-process SQL database optimized for analytical queries. Used in Example 1 for fast, local execution. |
+| **LLM** | Large Language Model (e.g., Claude, GPT-4, Qwen). Powers the agent's reasoning and language understanding. |
+| **MCP** | Model Context Protocol. A standard for agents to discover and query semantic models and APIs in a structured way. |
+| **Ollama** | A local LLM inference engine. Allows running models like Qwen 2.5 on your machine without cloud APIs. |
+| **Semantic Layer** | A governed, business-friendly abstraction over raw data. Defines what metrics and dimensions mean in business terms. |
+| **Semantic Model** | A structured representation of business entities, relationships, and calculations. Can be YAML, dbt, LookML, or SQL. |
+| **Slayer** | An open-source semantic modeling framework (by Motley Data). Compiles business questions into SQL queries. |
+| **YAML** | Human-readable data format. Used for data contracts and configuration in Example 1. |
+
+---
+
+## �📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+Amit Dixit
