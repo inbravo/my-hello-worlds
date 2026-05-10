@@ -1,6 +1,20 @@
 # My Hello Worlds: My first interaction to a technical solution
 
-This repo contains various "Hello World" examples demonstrating **Context Engineering (CE)** — the discipline of designing, structuring, and governing business context delivered to LLMs so they reason and act correctly on your data.
+This repo contains various "Hello World" examples demonstrating various working usecases mostly in agentic AI space.
+
+---
+
+## Repository Structure
+
+This repository contains **three main examples** organized in separate folders:
+
+### 📂 Directory Listing
+
+- [[ce]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bhello-world%5D-%5B2026-05%5D) - Context Engineering demo using Data Contract-based Semantic Layer 
+- [[ce]-[slayer]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bbfsi%5D-%5B2026-05%5D) - BFSI domain example using MCP-compatible Semantic Layer 
+- [[ce]-[slayer]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bhello-world%5D-%5B2026-05%5D) - A basic Slayer based Semantic layer example
+
+---
 
 ## Semantics and Context Engineering
 
@@ -27,18 +41,6 @@ Semantic is a broader term including these components:
 - A **semantic model** says: *"cet1_ratio_pct = CET1 Capital ÷ RWA × 100, display as percentage"*
 - A **knowledge graph** says: *"BANK_HOLDCO → holds → BANK_SUBSIDIARY → reports → CET1 position"*
 - A **metric layer** says: *"CET1 Headroom = cet1_ratio_pct − combined_buffer, flagged if < 1pp"*
-
----
-
-## Repository Structure
-
-This repository contains **three main examples** organized in separate folders:
-
-### 📂 Directory Listing
-
-- **`[ce]-[hello-world]-[2026-05]`** - Context Engineering demo using Data Contract-based Semantic Layer (Component 1)
-- **`[ce]-[slayer]-[bfsi]-[2026-05]`** - Banking, Financial Services & Insurance (BFSI) example using MCP-compatible Semantic Layer (Component 3)
-- **`[ce]-[slayer]-[hello-world]-[2026-05]`** - Additional Slayer framework examples
 
 ---
 
