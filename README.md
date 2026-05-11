@@ -1,6 +1,5 @@
-# My Hello Worlds: My first interaction to a technical solution
-
-This repo contains various "Hello World" examples demonstrating various working usecases mostly in agentic AI space.
+# Hello Worlds: First Contact with a Technology
+Minimal, working examples across the agentic AI stack — MCP servers, agent frameworks, context pipelines, and the scaffolding nobody documents properly.
 
 ---
 
