@@ -1,0 +1,133 @@
+dataContractSpecification: 0.9.3
+id: urn:datacontract:bfsi:capital-risk:v1
+
+info:
+  title: Capital Risk Data Contract
+  version: "1.0.0"
+  status: active
+  description: >
+    Quarterly capital adequacy snapshot for BANK_HOLDCO under the Basel III/IV
+    framework. Covers Common Equity Tier 1 (CET1) capital, risk-weighted assets
+    (RWA), and the combined regulatory buffer requirement. Used by the Treasury
+    Risk team for internal capital reporting and regulatory submissions to the PRA.
+  owner: Treasury Risk Team
+  contact:
+    name: Treasury Risk Team
+    email: treasury.risk@bank.com
+    url: https://internal.bank.com/data/capital-risk
+  tags:
+    - bfsi
+    - capital-adequacy
+    - basel-iii
+    - regulatory
+
+servers:
+  production:
+    type: duckdb
+    path: capital_odcs.duckdb
+    description: Local DuckDB instance seeded by bootstrap_odcs.py
+
+terms:
+  usage: >
+    Approved for internal capital adequacy reporting, regulatory submissions,
+    and AI-assisted analysis by authorised Treasury Risk personnel.
+  limitations: >
+    Not approved for external distribution. Data is confidential and subject
+    to PRA data handling requirements.
+  billing: internal
+  noticePeriod: P3M
+
+models:
+  capital_position:
+    description: >
+      Quarterly capital adequacy snapshot per legal entity and reporting date.
+      Contains CET1 capital, risk-weighted assets (RWA), the CET1 ratio, and
+      the combined regulatory buffer (Capital Conservation Buffer + G-SII buffer
+      + Countercyclical buffer). Query this table to assess capital adequacy,
+      buffer headroom (CET1 ratio minus combined buffer), or CET1 ratio trends
+      across quarters. A headroom below zero triggers regulatory intervention.
+    type: table
+    fields:
+      reporting_date:
+        type: date
+        required: true
+        description: Regulatory reporting date, typically quarter-end (YYYY-MM-DD)
+        examples:
+          - "2025-09-30"
+          - "2025-12-31"
+          - "2026-03-31"
+      entity:
+        type: string
+        required: true
+        description: Legal entity identifier (e.g. BANK_HOLDCO)
+        examples:
+          - "BANK_HOLDCO"
+      cet1_capital_mm:
+        type: number
+        required: true
+        description: Common Equity Tier 1 capital in millions GBP
+        examples:
+          - 27410.00
+          - 28150.00
+          - 29273.00
+      rwa_mm:
+        type: number
+        required: true
+        description: Risk-weighted assets in millions GBP
+        examples:
+          - 190500.00
+          - 192000.00
+          - 197400.00
+      cet1_ratio_pct:
+        type: number
+        required: true
+        description: >
+          CET1 ratio as a percentage — computed as (cet1_capital_mm / rwa_mm) * 100.
+          Must remain above the combined_buffer to avoid regulatory intervention.
+        examples:
+          - 14.39
+          - 14.66
+          - 14.83
+      combined_buffer:
+        type: number
+        required: true
+        description: >
+          Combined regulatory buffer requirement as a percentage.
+          Equals Capital Conservation Buffer (2.5%) + G-SII buffer + Countercyclical
+          buffer. Headroom = cet1_ratio_pct - combined_buffer. Must remain positive.
+        examples:
+          - 9.75
+
+quality:
+  type: SodaCL
+  specification:
+    checks for capital_position:
+      - row_count > 0
+      - duplicate_count(reporting_date, entity) = 0
+      - missing_count(cet1_ratio_pct) = 0
+      - missing_count(combined_buffer) = 0
+      - min(cet1_ratio_pct) > 0
+      - max(combined_buffer) < 25
+      - min(rwa_mm) > 0
+      - min(cet1_capital_mm) > 0
+
+servicelevels:
+  availability:
+    description: Data available during all PRA business hours
+    percentage: 99.9%
+  retention:
+    description: Rolling 3-year retention of quarterly snapshots
+    period: P3Y
+    unlimited: false
+  freshness:
+    description: Updated within 5 business days of each quarter-end
+    threshold: P5D
+    timestampField: capital_position.reporting_date
+  support:
+    description: Treasury Risk Team responds within 1 business day
+    time: "09:00-17:00 GMT"
+    responseTime: P1D
+  backup:
+    description: Daily incremental backup, weekly full backup retained for 1 year
+    interval: daily
+    recovery: P1D
