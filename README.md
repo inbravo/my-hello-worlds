@@ -5,13 +5,16 @@ Minimal, working examples across the agentic AI stack — MCP servers, agent fra
 
 ## Repository Structure
 
-This repository contains **three main examples** organized in separate folders:
+This repository contains **four examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
 
 ### 📂 Directory Listing
 
-- [[ce]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bhello-world%5D-%5B2026-05%5D) - Context Engineering demo using Data Contract-based Semantic Layer 
-- [[ce]-[slayer]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bbfsi%5D-%5B2026-05%5D) - BFSI domain example using MCP-compatible Semantic Layer 
-- [[ce]-[slayer]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bhello-world%5D-%5B2026-05%5D) - A basic Slayer based Semantic layer example
+| # | Folder | Semantic Component | Description |
+|---|---|---|---|
+| 1 | [[ce]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bhello-world%5D-%5B2026-05%5D) | Hand-written YAML contract | CE baseline — agent reads a data contract and writes its own SQL |
+| 2 | [[ce]-[slayer]-[hello-world]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bhello-world%5D-%5B2026-05%5D) | Semantic model — generic | Agent queries a live semantic layer via REST. No SQL written by the agent |
+| 3 | [[ce]-[slayer]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic model — BFSI domain | Real datasource registered into a semantic layer. BFSI capital adequacy use case |
+| 4 | [[ce]-[odcs]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bodcs%5D-%5Bbfsi%5D-%5B2026-05%5D) | Formal ODCS contract (Bitol 0.9.3) | Upgrades the YAML contract to a governed standard — adds ownership, quality checks, SLA, and freshness metadata |
 
 ---
 
@@ -84,27 +87,36 @@ python bootstrap_bfsi.py && python setup_bfsi.py && python agent_slayer_bfsi_oll
 
 ---
 
+### Example 3: Formal ODCS Data Contract — Bitol 0.9.3 (Component 1 — governed)
+
+**What it shows:**
+- Upgrades the hand-written YAML contract from Example 1 to a formal **Bitol/ACRYL Open Data Contract Standard (ODCS 0.9.3)** contract — the same concept, done the right way.
+- The contract now includes ownership, quality checks (SodaCL), freshness SLAs, usage terms, and retention policy. The agent reads all of it and can answer both data questions *and* governance questions from the same contract.
+- Demo 1 could answer: *"What is our CET1 ratio?"* Demo 3 answers: *"What is our CET1 ratio — is this data certified, how fresh is it, and who owns it?"*
+
+**Quick Start (fully local):**
+```bash
+cd my-hello-worlds/[ce]-[odcs]-[bfsi]-[2026-05]/code
+pip install openai duckdb pyyaml structlog
+ollama serve && ollama pull qwen2.5
+python bootstrap_odcs.py && python agent_odcs_ollama.py
+```
+
+**Options:** Use Anthropic API or Ollama for local inference
+
+---
+
 ## � Next Steps & Learning Path
 
 After running the examples, here's how to deepen your understanding:
 
 ### Learning Progression
 
-1. **Start with Example 1** (Data Contracts)
-   - Understand how YAML contracts describe data semantics
-   - Experiment with modifying the contract and observing agent behavior changes
-   - Explore how the agent generates its own SQL
-
-2. **Move to Example 2** (MCP Semantic Layer)
-   - Learn how REST APIs expose semantic models
-   - Understand the difference between agent-driven SQL vs semantic layer compilation
-   - Experiment with different business questions
-
-3. **Extend the Examples**
-   - Add new tables or domains to the DuckDB database
-   - Modify the YAML contracts to add new business rules
-   - Integrate with your own LLM or inference engine
-   - Add new metrics to the Slayer semantic model
+1. **Example 1** — Hand-written YAML contract. Understand how a data contract gives an LLM structured context to write its own SQL. The CE baseline.
+2. **Example 2** — Semantic model (SLayer, generic dataset). Learn how a semantic layer works. Agent queries via REST, never writes SQL.
+3. **Example 3** — Semantic model (SLayer, BFSI domain). Register a real datasource into a semantic layer and run a domain agent against it.
+4. **Example 4** — Formal ODCS contract (Bitol 0.9.3). Understand how a governed, standard-compliant contract enriches agent context with ownership, quality, and SLA metadata.
+5. **Coming** — Data product (DPDS), Ontology (OWL/RDF + OBML), Metric layer, Full stack quality comparison.
 
 ### Customization Ideas
 
