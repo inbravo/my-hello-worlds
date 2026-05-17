@@ -185,7 +185,50 @@ After running the examples, here's how to deepen your understanding:
  └───────────────┘
 ```
 
-**Key Difference:** In Example 1, the agent writes SQL. In Example 2, the semantic layer compiles SQL based on business metrics—more controlled, auditable, and reliable.
+**Key Difference:** In Example 1, the agent writes SQL. In Example 2, the semantic layer compiles SQL based on business metrics — more controlled, auditable, and reliable.
+
+---
+
+### Example 3 & 4: ODCS Formal Data Contract Flow (Bitol 0.9.3)
+
+```
+┌─────────────────────────────────────────────────┐
+│            ODCS Contract (Bitol 0.9.3)          │
+│  ┌───────────┐  ┌─────────┐  ┌───────────────┐  │
+│  │   info    │  │ models  │  │    quality    │  │
+│  │  owner    │  │ fields  │  │  SodaCL checks│  │
+│  │  status   │  │ descrip.│  │               │  │
+│  └───────────┘  └─────────┘  └───────────────┘  │
+│  ┌───────────┐  ┌─────────┐  ┌───────────────┐  │
+│  │  servers  │  │  terms  │  │ servicelevels │  │
+│  │  (DuckDB) │  │  usage  │  │ SLA/freshness │  │
+│  └───────────┘  └─────────┘  └───────────────┘  │
+└───────────────────────┬─────────────────────────┘
+                        │  all sections injected
+                        │  into tool description
+                        ▼
+         ┌──────────────────────────┐
+         │        LLM Agent         │
+         │  (data + governance Q's) │
+         └──────────┬───────────────┘
+                    │  generates SQL
+                    ▼
+         ┌──────────────────┐
+         │     DuckDB       │
+         │  (executes SQL)  │
+         └──────────┬───────┘
+                    │
+                    ▼
+         ┌──────────────────────────────────┐
+         │  Answer — data + governance      │
+         │  "CET1 is 14.83%. Data is active,│
+         │   owned by Treasury Risk Team,   │
+         │   refreshed within 5 days of     │
+         │   quarter-end."                  │
+         └──────────────────────────────────┘
+```
+
+**Key Difference from Example 1:** Same YAML-to-SQL pattern, but the ODCS contract supplies governance metadata — ownership, quality certification, SLA, freshness — so the agent answers governance questions alongside data questions. The contract is also standard-compliant (Bitol 0.9.3) rather than informal.
 
 ---
 
@@ -196,6 +239,7 @@ After running the examples, here's how to deepen your understanding:
 | **AI Agent** | An autonomous system that understands natural language questions and takes actions (writing SQL, querying data, reasoning) to find answers. |
 | **Context Engineering (CE)** | The discipline of structuring and governing business context so LLMs reason correctly on your data. |
 | **Data Contract** | A YAML or JSON file that documents what a dataset means, who owns it, SLAs, freshness, and lineage. Bridges semantic and technical layers. |
+| **ODCS** | Open Data Contract Standard (Bitol/ACRYL). A formal, open specification for data contracts covering schema, quality, SLAs, ownership, and usage terms. |
 | **DuckDB** | An in-process SQL database optimized for analytical queries. Used in Example 1 for fast, local execution. |
 | **LLM** | Large Language Model (e.g., Claude, GPT-4, Qwen). Powers the agent's reasoning and language understanding. |
 | **MCP** | Model Context Protocol. A standard for agents to discover and query semantic models and APIs in a structured way. |
