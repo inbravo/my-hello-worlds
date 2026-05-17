@@ -198,3 +198,25 @@ the governance context. Demo 1 could not answer them.
 | Agent (local) | Ollama (`qwen2.5`) |
 | Agent (cloud) | Claude (`claude-sonnet-4-6`) |
 | Observability | structlog JSON |
+
+
+## Sample Output (qwen2.5 via Ollama)
+
+```bash
+(.venv) inbravo@IMUL-ML0515 code % python agent_odcs_ollama.py
+{"question": "What is our current CET1 ratio and buffer headroom? Is this data certified, and who should I contact if I have questions?", "contract": "contracts/capital_risk_odcs.yaml", "odcs_version": "0.9.3", "contract_status": "active", "contract_owner": "treasury.risk@bank.com", "ollama_model": "qwen2.5", "event": "agent.start", "timestamp": "2026-05-15T15:31:25.376618Z"}
+{"stop_reason": "tool_calls", "latency_ms": 6351, "event": "agent.turn1", "timestamp": "2026-05-15T15:31:31.764646Z"}
+{"sql": "SELECT cet1_ratio_pct, combined_buffer, (cet1_ratio_pct - combined_buffer) as buffer_headroom FROM capital_position ORDER BY reporting_date DESC LIMIT 1", "event": "tool.call", "timestamp": "2026-05-15T15:31:31.764811Z"}
+{"rows": 1, "data": [{"cet1_ratio_pct": "Decimal('14.8300')", "combined_buffer": "Decimal('9.7500')", "buffer_headroom": "Decimal('5.0800')"}], "event": "tool.result", "timestamp": "2026-05-15T15:31:31.803598Z"}
+{"latency_ms": 7538, "event": "agent.answer", "timestamp": "2026-05-15T15:31:39.342488Z"}
+
+============================================================
+Based on the latest available data as of [reporting_date], our current CET1 ratio is 14.83%, and the buffer headroom, which is the difference between the CET1 ratio and the combined regulatory buffer, is 5.08%.
+
+This data is certified for internal capital adequacy reporting, regulatory submissions, and AI-assisted analysis by authorised Treasury Risk personnel.
+
+For any questions or further clarification, you can contact the Treasury Risk Team at treasury.risk@bank.com.
+
+If these results are accurate and up-to-date according to your needs, please let me know. If not, we might need to review the data with more detail or from a different perspective.
+============================================================
+```
