@@ -289,3 +289,23 @@ QUESTION = "What are the SLA commitments for this data product?"
 | Agent (local) | Ollama (`qwen2.5`) |
 | Agent (cloud) | Claude (`claude-sonnet-4-6`) |
 | Observability | structlog JSON |
+
+## Example Execution
+
+```bash
+python agent_odps.py
+```
+
+```json
+{"question": "...", "event": "agent.start", ...}
+{"stop_reason": "tool_use", "event": "agent.turn1", ...}
+{"sql": "SELECT ...", "event": "tool.call", ...}
+{"rows": 7, "data": [...], "event": "tool.result", ...}
+{"event": "agent.answer", ...}
+```
+
+```
+============================================================
+<answer text here>
+============================================================
+```
