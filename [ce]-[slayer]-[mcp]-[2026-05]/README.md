@@ -52,22 +52,16 @@ Claude uses these tools automatically when you ask a business question.
 
 ---
 
-## Option A — Jaffle Shop (zero prerequisites)
+## Option A — Jaffle Shop (zero prerequisites, 2 steps)
 
-**Step 1 — Install uv (if not already installed):**
+**Step 1 — Add SLayer to Claude Desktop config:**
+
 ```bash
-pip install uv
-```
-
-**Step 2 — Add SLayer to Claude Desktop:**
-
-Open your Claude Desktop config:
-```bash
-# macOS
+# macOS — open the config file
 open ~/Library/Application\ Support/Claude/claude_desktop_config.json
 ```
 
-Add the following (merge with any existing `mcpServers` block):
+Add (or merge into any existing `mcpServers` block):
 ```json
 {
   "mcpServers": {
@@ -80,12 +74,11 @@ Add the following (merge with any existing `mcpServers` block):
 }
 ```
 
-> The `--demo` flag auto-ingests the Jaffle Shop dataset (orders, stores,
-> customers, products) on first run. Idempotent — safe to restart.
+> `uvx` is bundled with `uv`. If you don't have it: `pip install uv`.
+> The `--demo` flag auto-ingests the Jaffle Shop dataset on first run — idempotent, nothing to bootstrap.
 
-**Step 3 — Restart Claude Desktop.**
+**Step 2 — Restart Claude Desktop and ask:**
 
-**Step 4 — Ask a question in Claude Desktop:**
 ```
 What are the top 3 stores by total order revenue?
 How many orders were placed in the last 30 days?
@@ -93,8 +86,8 @@ Which customers have placed more than 5 orders?
 What is the average order value by store?
 ```
 
-Claude will call SLayer MCP tools, SLayer compiles the SQL, and Claude
-returns the answer — all without a single line of Python.
+Claude calls SLayer MCP tools → SLayer compiles SQL → DuckDB executes → answer in chat.
+No Python. No REST calls. No agent loop.
 
 ---
 
