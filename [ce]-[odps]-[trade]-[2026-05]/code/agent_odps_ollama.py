@@ -200,8 +200,6 @@ final = client.chat.completions.create(
 )
 answer = final.choices[0].message.content
 
-answer = final.choices[0].message.content
-
 # Guard: model made another tool call instead of answering
 if not answer and final.choices[0].message.tool_calls:
     answer = "(Model issued a second tool call instead of answering. Raw tool args: " \
