@@ -18,6 +18,22 @@ agent_odps.py                         — Option B: Claude via Anthropic SDK
 
 ---
 
+## What is ODPS?
+
+**Open Data Product Standard (ODPS)** is an open specification for describing data products in a standard, machine-readable format. Think of it as **OpenAPI for data products** — the same way OpenAPI describes a REST API (endpoints, inputs, outputs, auth), ODPS describes a data product (where data comes from, how it is accessed, who owns it, what SLAs apply, what it is built to answer).
+
+Maintained by the **Open Data Product Initiative** under the Linux Foundation Data & AI. Version 2.0 is the current stable specification.
+
+| Analogy | Describes |
+|---|---|
+| OpenAPI (Swagger) | A REST API — endpoints, request/response, auth |
+| ODCS (Bitol) | A data table — schema, quality, SLA, ownership |
+| **ODPS** | **A data product — ports, use cases, SLAs, pricing, governance** |
+
+ODPS is the right standard when you are operating a **data mesh** or **data product marketplace** — where teams publish and consume governed data products rather than raw tables. The agent in this demo reads the product definition the same way a developer reads an OpenAPI spec before calling an API.
+
+---
+
 ## What changes from Example 3 (ODCS)
 
 | | Example 3 — ODCS (Bitol) | Example 4 — ODPS 2.0 |
