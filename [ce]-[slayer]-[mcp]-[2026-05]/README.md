@@ -1,0 +1,222 @@
+# Context Engineering — SLayer MCP Demo
+
+**Example 6 of the CE series.** The same SLayer semantic layer from Examples
+2 and 3, now exposed as an **MCP server**. No Python agent. No REST calls.
+No tool definitions. Claude Desktop or Claude Code discovers SLayer tools
+natively — the semantic layer becomes invisible infrastructure.
+
+```
+config/claude_desktop_jaffle.json  — Claude Desktop config (Jaffle Shop dataset)
+config/claude_desktop_bfsi.json    — Claude Desktop config (BFSI capital position)
+```
+
+---
+
+## What changes from Examples 2 & 3
+
+| | Examples 2 & 3 — REST API | Example 6 — MCP |
+|---|---|---|
+| Agent code | Python script (~170 lines) | None |
+| Tool definition | Manual, in code | Auto-discovered from SLayer |
+| Transport | HTTP REST (`POST /query`) | stdio MCP |
+| Client | Custom agent loop | Claude Desktop / Claude Code |
+| SQL visibility | Logged via structlog | Visible in Claude's tool call trace |
+| Payload format | Must shape measures/dimensions manually | Handled by MCP protocol |
+| Setup | `python agent_slayer_*.py` | One config line in Claude Desktop |
+
+**The key shift:** In Examples 2 & 3, you write an agent that calls SLayer.
+In Example 6, Claude *is* the agent — SLayer tools appear in Claude Desktop
+the same way any MCP server tool does. No glue code needed.
+
+---
+
+## How SLayer MCP Works
+
+SLayer runs two server modes:
+
+```
+slayer serve   →  REST API at http://127.0.0.1:5143  (Examples 2 & 3)
+slayer mcp     →  MCP server over stdio               (this example)
+```
+
+Both share the same default storage (`~/.local/share/slayer`), so any
+datasource registered via `setup_bfsi.py` is automatically available in the
+MCP server too — no re-registration needed.
+
+When Claude Desktop connects to `slayer mcp`, SLayer exposes tools such as:
+- `query_model` — query any registered semantic model with measures and dimensions
+- `list_models` — discover available models and their columns
+- `get_model` — inspect a model's schema and metadata
+
+Claude uses these tools automatically when you ask a business question.
+
+---
+
+## Option A — Jaffle Shop (zero prerequisites)
+
+**Step 1 — Install uv (if not already installed):**
+```bash
+pip install uv
+```
+
+**Step 2 — Add SLayer to Claude Desktop:**
+
+Open your Claude Desktop config:
+```bash
+# macOS
+open ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+Add the following (merge with any existing `mcpServers` block):
+```json
+{
+  "mcpServers": {
+    "slayer": {
+      "command": "uvx",
+      "args": ["--from", "motley-slayer[all]", "slayer", "mcp", "--demo"],
+      "env": {}
+    }
+  }
+}
+```
+
+> The `--demo` flag auto-ingests the Jaffle Shop dataset (orders, stores,
+> customers, products) on first run. Idempotent — safe to restart.
+
+**Step 3 — Restart Claude Desktop.**
+
+**Step 4 — Ask a question in Claude Desktop:**
+```
+What are the top 3 stores by total order revenue?
+How many orders were placed in the last 30 days?
+Which customers have placed more than 5 orders?
+What is the average order value by store?
+```
+
+Claude will call SLayer MCP tools, SLayer compiles the SQL, and Claude
+returns the answer — all without a single line of Python.
+
+---
+
+## Option B — BFSI Capital Position (requires Example 3 setup)
+
+**Step 1 — Register the BFSI datasource (once):**
+```bash
+# Start SLayer REST server
+uvx --from 'motley-slayer[all]' slayer serve --demo
+
+# In a new terminal — register capital_bfsi datasource
+cd ../[ce]-[slayer]-[bfsi]-[2026-05]/code
+python bootstrap_bfsi.py && python setup_bfsi.py
+```
+
+This writes the `capital_bfsi` datasource to SLayer's default storage
+(`~/.local/share/slayer`) — shared with the MCP server.
+
+**Step 2 — Stop the REST server. Add SLayer MCP to Claude Desktop:**
+
+```json
+{
+  "mcpServers": {
+    "slayer": {
+      "command": "uvx",
+      "args": ["--from", "motley-slayer[all]", "slayer", "mcp"],
+      "env": {}
+    }
+  }
+}
+```
+
+> No `--demo` flag here — you want your registered `capital_bfsi`
+> datasource, not just the Jaffle Shop demo.
+
+**Step 3 — Restart Claude Desktop.**
+
+**Step 4 — Ask capital adequacy questions:**
+```
+What is our current CET1 ratio?
+How much buffer headroom do we have as of the latest reporting date?
+Show me the CET1 ratio trend across all three quarters.
+What is our risk-weighted asset position as of Q1 2026?
+```
+
+---
+
+## Option C — Claude Code (CLI, no GUI needed)
+
+Add SLayer as an MCP server directly in Claude Code:
+
+```bash
+# Jaffle Shop
+claude mcp add slayer -- uvx --from 'motley-slayer[all]' slayer mcp --demo
+
+# BFSI (after setup_bfsi.py has been run)
+claude mcp add slayer -- uvx --from 'motley-slayer[all]' slayer mcp
+```
+
+Then start Claude Code and ask the same business questions. SLayer tools
+appear automatically in the tool list.
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────┐
+│         Claude Desktop / Code        │
+│  (LLM + MCP client built-in)         │
+└──────────────────┬───────────────────┘
+                   │  MCP protocol (stdio)
+                   │  auto-discovers tools
+                   ▼
+┌──────────────────────────────────────┐
+│           SLayer MCP Server          │
+│      slayer mcp --demo               │
+│                                      │
+│  Tools exposed:                      │
+│  • query_model   (measures/dims)     │
+│  • list_models   (discovery)         │
+│  • get_model     (schema inspect)    │
+└──────────────────┬───────────────────┘
+                   │  compiles SQL
+                   ▼
+┌──────────────────────────────────────┐
+│              DuckDB                  │
+│  Jaffle Shop  /  capital_bfsi        │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────┐
+│  Answer — in Claude Desktop chat     │
+│  No Python. No agent loop. No REST.  │
+└──────────────────────────────────────┘
+```
+
+---
+
+## CE Series
+
+| Example | Semantic component | Agent code required |
+|---------|-------------------|---------------------|
+| [Example 1](../[ce]-[hello-world]-[2026-05]/README.md) | Hand-written YAML contract | Yes — `agent.py` |
+| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model (SLayer REST) | Yes — `agent_slayer_hw.py` |
+| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — BFSI (SLayer REST) | Yes — `agent_slayer_bfsi.py` |
+| [Example 4](../[ce]-[odcs]-[bfsi]-[2026-05]/README.md) | Formal ODCS contract | Yes — `agent_odcs.py` |
+| [Example 5](../[ce]-[odps]-[trade]-[2026-05]/README.md) | Data product (ODPS 2.0) | Yes — `agent_odps.py` |
+| **Example 6 (this)** | **SLayer via MCP** | **No — Claude Desktop only** |
+| Example 7 | Ontology (OWL/RDF + OBML) | Coming |
+| Example 8 | Metric layer | Coming |
+| Example 9 | Full stack comparison | Coming |
+
+---
+
+## Stack
+
+| Layer | Component |
+|---|---|
+| Semantic layer | SLayer (`motley-slayer[all]`) |
+| Transport | MCP stdio |
+| MCP client | Claude Desktop / Claude Code |
+| Dataset A | Jaffle Shop (built-in demo) |
+| Dataset B | `capital_bfsi` (from Example 3) |
+| Storage | `~/.local/share/slayer` (default, shared) |
