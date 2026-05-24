@@ -1,0 +1,134 @@
+openDataProductSpecification: 2.0.0
+
+product:
+  name: Trade Exposure Analytics
+  productID: urn:dataproduct:trade:exposure-analytics:v1
+  visibility: internal
+  status: active
+  version: "1.0.0"
+  type: dataset
+  domain: Trade Finance
+  description: >
+    Governed data product providing open trade position analytics for the
+    Trade Finance Risk team. Covers counterparty exposure, instrument
+    concentration, credit rating distribution, and settlement risk across
+    FX forwards, bonds, and derivatives. Used for daily risk monitoring,
+    regulatory reporting, and AI-assisted exposure queries.
+
+  owner:
+    name: Trade Finance Risk Team
+    email: trade.risk@bank.com
+    team: Risk Analytics
+
+  categories:
+    - trade-finance
+    - risk-analytics
+    - counterparty-risk
+
+  tags:
+    - settlement-risk
+    - counterparty-exposure
+    - credit-concentration
+    - fx-forward
+    - derivatives
+
+  useCases:
+    - Counterparty exposure monitoring and limit management
+    - Settlement risk identification (trades due within N days)
+    - Credit concentration analysis by rating band
+    - Regional exposure breakdown (EMEA vs North America)
+    - AI-assisted risk queries via natural language
+
+  inputPorts:
+    - name: core_trading_system
+      type: operational_db
+      description: >
+        Source of trade records from the core trading platform.
+        Feeds confirmed and settled trades into the analytical layer.
+      format: SQL
+      refreshCadence: daily
+      refreshTime: "06:00 GMT"
+
+  outputPorts:
+    - name: trade_exposure_db
+      type: duckdb
+      description: >
+        Analytical DuckDB instance optimised for agent queries.
+        Contains the trade_exposure table with all open and recently
+        settled positions.
+      path: trade_odps.duckdb
+      tables:
+        - name: trade_exposure
+          description: >
+            Open and settled trade positions per counterparty and instrument.
+            Each row represents one trade. Use this table to compute total
+            notional exposure by counterparty, filter trades by settlement
+            date for settlement risk, analyse credit rating concentration,
+            or break down exposure by region or instrument type.
+          columns:
+            - name: trade_id
+              type: VARCHAR
+              description: Unique trade identifier
+            - name: counterparty
+              type: VARCHAR
+              description: Counterparty legal entity name (e.g. GOLDMAN_SACHS)
+            - name: instrument_type
+              type: VARCHAR
+              description: Instrument class — FX_FORWARD, BOND, or DERIVATIVE
+            - name: notional_usd_mm
+              type: DECIMAL(18,2)
+              description: Notional trade value in millions USD
+            - name: settlement_date
+              type: DATE
+              description: Contractual settlement date (YYYY-MM-DD)
+            - name: credit_rating
+              type: VARCHAR
+              description: >
+                Counterparty credit rating at trade inception.
+                Scale — AAA, AA, A, BBB, BB, B, CCC.
+                Trades rated BB or below carry elevated credit risk.
+            - name: region
+              type: VARCHAR
+              description: Counterparty home region — EUROPE or NORTH_AMERICA
+            - name: status
+              type: VARCHAR
+              description: Trade lifecycle status — OPEN, SETTLED, or DEFAULTED
+
+  slaProperties:
+    - dimension: freshness
+      value: T+1
+      description: Positions updated by 08:00 GMT each business day
+    - dimension: completeness
+      value: 100%
+      description: All confirmed open trades captured within 2 hours of booking
+    - dimension: uptime
+      value: 99.9%
+      description: Available during trading hours 07:00–19:00 GMT
+
+  dataQuality:
+    - dimension: completeness
+      checks:
+        - missing_count(counterparty) = 0
+        - missing_count(notional_usd_mm) = 0
+        - missing_count(settlement_date) = 0
+        - missing_count(credit_rating) = 0
+    - dimension: validity
+      checks:
+        - min(notional_usd_mm) > 0
+        - status in ['OPEN', 'SETTLED', 'DEFAULTED']
+        - credit_rating in ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC']
+        - row_count > 0
+
+  pricing:
+    model: internal
+    cost: free
+
+  terms:
+    usage: >
+      Approved for internal trade risk monitoring, regulatory reporting,
+      and AI-assisted analysis by authorised Trade Finance Risk personnel.
+    limitations: >
+      Not approved for external distribution. Data subject to FCA and
+      PRA data handling requirements.
+    dataRetention: P3Y
+    noticePeriod: P3M
