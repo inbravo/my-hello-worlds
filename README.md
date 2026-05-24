@@ -5,7 +5,7 @@ Minimal, working examples across the agentic AI stack — MCP servers, agent fra
 
 ## Repository Structure
 
-This repository contains **five examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
+This repository contains **seven examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
 
 ### 📂 Directory Listing
 
@@ -16,6 +16,8 @@ This repository contains **five examples** organized in separate folders, each i
 | 3 | [[ce]-[slayer]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic model — BFSI domain | Real datasource registered into a semantic layer. BFSI capital adequacy use case |
 | 4 | [[ce]-[odcs]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bodcs%5D-%5Bbfsi%5D-%5B2026-05%5D) | Formal ODCS contract (Bitol 0.9.3) | Upgrades the YAML contract to a governed standard — adds ownership, quality checks, SLA, and freshness metadata |
 | 5 | [[ce]-[odps]-[trade]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bodps%5D-%5Btrade%5D-%5B2026-05%5D) | Data product (ODPS 2.0) | Steps up from table governance to product governance — ports, use cases, SLAs. New domain: Trade Finance |
+| 6 | [[ce]-[slayer]-[mcp]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5B2026-05%5D) | Semantic layer via MCP — generic | Transport upgrade — same semantic layer, now accessed via MCP stdio. Claude Desktop is the agent. No Python |
+| 7 | [[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic layer via MCP — BFSI | Same Basel III/IV capital adequacy data as Example 3, now over MCP. Zero agent code |
 
 ---
 
@@ -158,6 +160,60 @@ python bootstrap_odps.py && python agent_odps_ollama.py
 
 ---
 
+### Example 6: Semantic Layer via MCP — Generic (Jaffle Shop)
+
+**Semantic component:** Semantic Model (Component 3) via MCP transport
+
+**What it shows:**
+- The same semantic layer from Examples 2 & 3 — but the transport changes from REST to **MCP stdio**. No Python agent code. Claude Desktop connects directly and auto-discovers the Jaffle Shop model.
+- Demonstrates that the semantic context is transport-independent. You switch from REST to MCP; the business definitions stay the same.
+
+**Quick Start:**
+```bash
+# No Python agent needed — Claude Desktop IS the agent
+# Add to Claude Desktop config:
+{
+  "mcpServers": {
+    "slayer": {
+      "command": "uvx",
+      "args": ["--from", "motley-slayer[all]", "slayer", "mcp", "--demo"]
+    }
+  }
+}
+# Restart Claude Desktop, then ask: "What are total orders by store?"
+```
+
+**Options:** Claude Desktop (Jaffle Shop demo data) or Claude Code CLI (`claude mcp add slayer -- uvx --from 'motley-slayer[all]' slayer mcp --demo`)
+
+---
+
+### Example 7: Semantic Layer via MCP — BFSI (Capital Adequacy)
+
+**Semantic component:** Semantic Model (Component 3) via MCP — BFSI domain
+
+**What it shows:**
+- The same Basel III/IV capital adequacy data from Example 3 — but accessed via MCP, not the REST API.
+- No Python agent. No tool definitions. Claude Desktop is the agent. SLayer MCP auto-discovers the `capital_position` model and Claude answers CET1 and buffer headroom questions directly.
+- The transport switches from HTTP REST to MCP stdio. The semantic context — same data, same model, same business meaning — does not change.
+
+**Quick Start:**
+```bash
+cd my-hello-worlds/[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/code
+pip install requests duckdb
+python bootstrap_mcp_bfsi.py
+uvx --from 'motley-slayer[all]' slayer serve   # register only
+python setup_mcp_bfsi.py                        # then Ctrl+C to stop serve
+# Add config/claude_desktop_bfsi.json to Claude Desktop, restart, and ask:
+# "What is our current CET1 ratio and buffer headroom?"
+```
+
+**Also works in Claude Code:**
+```bash
+claude mcp add slayer -- uvx --from 'motley-slayer[all]' slayer mcp
+```
+
+---
+
 ## 📈 Learning Progression
 
 Run the examples in this order for the clearest learning curve:
@@ -169,6 +225,8 @@ Run the examples in this order for the clearest learning curve:
 | 3 | Example 3 — SLayer (BFSI) | How to register a real datasource into a semantic layer and run a domain agent. |
 | 4 | Example 4 — ODCS (Bitol) | How a governed, standard-compliant contract adds ownership, quality, and SLA context. |
 | 5 | Example 5 — ODPS (Trade Finance) | How a data product definition governs at the capability level — ports, use cases, pricing. |
+| 6 | Example 6 — SLayer MCP (Jaffle Shop) | How MCP replaces the REST agent loop entirely. Claude Desktop becomes the agent. |
+| 7 | Example 7 — SLayer MCP (BFSI) | Same semantic model, same data — zero Python. MCP transport changes everything about the client, nothing about the semantics. |
 | Coming | Ontology (OWL/RDF + OBML) | How domain knowledge elevates agent reasoning beyond schema. |
 | Coming | Metric layer | How named, governed metrics become agent context. |
 | Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
@@ -304,6 +362,48 @@ Run the examples in this order for the clearest learning curve:
 ```
 
 **Key difference from Example 4:** ODCS governs a table. ODPS governs a business capability — the agent understands what problem the data product is built to solve, for whom, and under what SLA.
+
+---
+
+### Examples 6 & 7: Semantic Layer via MCP
+
+```
+┌──────────────────────────────────────────┐
+│           Claude Desktop / Claude Code   │
+│  (LLM + MCP client — no Python needed)  │
+└──────────────────┬───────────────────────┘
+                   │  MCP stdio
+                   │  auto-discovers model
+                   ▼
+┌──────────────────────────────────────────┐
+│        SLayer MCP Server                 │
+│   uvx ... slayer mcp [--demo]            │
+│                                          │
+│   Reads: ~/.local/share/slayer           │
+│   Finds: datasource + model              │
+│   Exposes: model as MCP tools            │
+└──────────────────┬───────────────────────┘
+                   │  compiles SQL
+                   ▼
+┌──────────────────────────────────────────┐
+│   DuckDB                                 │
+│   (Jaffle Shop or capital_bfsi.duckdb)   │
+└──────────────────┬───────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────┐
+│  Answer in Claude Desktop chat           │
+│  No Python. No agent loop. No tools.     │
+└──────────────────────────────────────────┘
+```
+
+**How SLayer storage is shared:**
+```
+slayer serve  ──writes──►  ~/.local/share/slayer/  ◄──reads──  slayer mcp
+```
+Run `setup_mcp_bfsi.py` once against the REST server — the MCP server picks up the datasource automatically. No further config needed.
+
+**Key difference from Examples 2 & 3:** REST requires a Python agent with an explicit tool loop. MCP exposes the same semantic model as native Claude tools — Claude Desktop calls them directly. Zero agent code.
 
 ---
 
