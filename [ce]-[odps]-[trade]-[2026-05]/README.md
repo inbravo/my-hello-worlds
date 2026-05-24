@@ -293,20 +293,21 @@ QUESTION = "What are the SLA commitments for this data product?"
 ## Example Execution
 
 ```bash
-(.venv) inbravo@IMUL-ML0515 code % python agent_odcs_ollama.py
-{"question": "What is our current CET1 ratio and buffer headroom? Is this data certified, and who should I contact if I have questions?", "contract": "contracts/capital_risk_odcs.yaml", "odcs_version": "0.9.3", "contract_status": "active", "contract_owner": "treasury.risk@bank.com", "ollama_model": "qwen2.5", "event": "agent.start", "timestamp": "2026-05-15T15:31:25.376618Z"}
-{"stop_reason": "tool_calls", "latency_ms": 6351, "event": "agent.turn1", "timestamp": "2026-05-15T15:31:31.764646Z"}
-{"sql": "SELECT cet1_ratio_pct, combined_buffer, (cet1_ratio_pct - combined_buffer) as buffer_headroom FROM capital_position ORDER BY reporting_date DESC LIMIT 1", "event": "tool.call", "timestamp": "2026-05-15T15:31:31.764811Z"}
-{"rows": 1, "data": [{"cet1_ratio_pct": "Decimal('14.8300')", "combined_buffer": "Decimal('9.7500')", "buffer_headroom": "Decimal('5.0800')"}], "event": "tool.result", "timestamp": "2026-05-15T15:31:31.803598Z"}
-{"latency_ms": 7538, "event": "agent.answer", "timestamp": "2026-05-15T15:31:39.342488Z"}
+(.venv) inbravo@IMUL-ML0515 code % python agent_odps_ollama.py
+{"question": "What is our total trade exposure by counterparty for all open trades? Which trades are settling within the next 30 days? Is this data fresh and who is responsible for it?", "product": "products/trade_exposure_product.yaml", "odps_version": "2.0.0", "product_status": "active", "product_domain": "Trade Finance", "product_owner": "trade.risk@bank.com", "ollama_model": "qwen2.5", "event": "agent.start", "timestamp": "2026-05-24T10:47:29.267469Z"}
+{"stop_reason": "tool_calls", "latency_ms": 12498, "event": "agent.turn1", "timestamp": "2026-05-24T10:47:41.797396Z"}
+{"sql": "SELECT counterparty, SUM(notional_usd_mm) AS total_exposure FROM trade_exposure WHERE status = 'OPEN' GROUP BY counterparty ORDER BY total_exposure DESC", "event": "tool.call", "timestamp": "2026-05-24T10:47:41.797560Z"}
+{"rows": 7, "data": [{"counterparty": "JPMORGAN", "total_exposure": "Decimal('890.00')"}, {"counterparty": "GOLDMAN_SACHS", "total_exposure": "Decimal('790.00')"}, {"counterparty": "CITIBANK", "total_exposure": "Decimal('560.00')"}, {"counterparty": "BARCLAYS", "total_exposure": "Decimal('460.00')"}, {"counterparty": "HSBC", "total_exposure": "Decimal('410.00')"}, {"counterparty": "DEUTSCHE_BANK", "total_exposure": "Decimal('320.00')"}, {"counterparty": "CREDIT_SUISSE", "total_exposure": "Decimal('220.00')"}], "event": "tool.result", "timestamp": "2026-05-24T10:47:41.826643Z"}
+{"latency_ms": 8899, "event": "agent.answer", "timestamp": "2026-05-24T10:47:50.726149Z"}
 
 ============================================================
-Based on the latest available data as of [reporting_date], our current CET1 ratio is 14.83%, and the buffer headroom, which is the difference between the CET1 ratio and the combined regulatory buffer, is 5.08%.
+Based on the data for all open trades:
 
-This data is certified for internal capital adequacy reporting, regulatory submissions, and AI-assisted analysis by authorised Treasury Risk personnel.
+1. JPMORGAN has the highest total exposure of $890 million.
+2. GOLDMAN_SACHS follows closely with a total exposure of approximately $790 million.
+3. CITIBANK, BARCLAYS, HSBC, DEUTSCHE_BANK, and CREDIT_SUISSE have total exposures of $560 million, $460 million, $410 million, $320 million, and $220 million respectively.
 
-For any questions or further clarification, you can contact the Treasury Risk Team at treasury.risk@bank.com.
+Next, let's check which trades are expected to settle within the next 30 days.
 
-If these results are accurate and up-to-date according to your needs, please let me know. If not, we might need to review the data with more detail or from a different perspective.
 ============================================================
 ```
