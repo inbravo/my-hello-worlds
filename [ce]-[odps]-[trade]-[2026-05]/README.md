@@ -34,6 +34,44 @@ ODPS is the right standard when you are operating a **data mesh** or **data prod
 
 ---
 
+## ODCS vs ODPS — and why choose ODPS
+
+ODCS asks: *"What does this table mean and who governs it?"*
+ODPS asks: *"What does this data product deliver, to whom, and how?"*
+
+| | ODCS (Bitol) | ODPS 2.0 |
+|---|---|---|
+| **Unit** | A table or dataset | A business capability / data product |
+| **Audience** | Data engineers, analysts | Data product owners, consumers, AI agents |
+| **Describes** | Schema, quality, SLA, ownership | Ports, use cases, pricing, contracts, SLAs |
+| **Input ports** | No | Yes — where data originates |
+| **Output ports** | No | Yes — how data is consumed |
+| **Use cases** | No | Yes — explicit list of approved questions |
+| **Pricing / chargeback** | No | Yes |
+| **Data mesh fit** | Partial | Native — built for mesh architecture |
+| **Discovery / catalogue** | Not designed for it | Designed for data product marketplaces |
+| **Maturity level** | Table governance | Product governance |
+
+**When to use which:**
+
+| Situation | Use |
+|---|---|
+| Govern one table — schema, quality, SLA, owner | ODCS |
+| Publish a data product consumed by multiple teams | ODPS |
+| Building a data mesh with product ownership | ODPS |
+| AI agent needs to know *what problem the data solves* | ODPS |
+| Need input/output port definitions for lineage | ODPS |
+| Running a data product catalogue or marketplace | ODPS |
+
+**The simplest way to explain it:**
+
+> ODCS is a governed label on a jar — it tells you what is inside, who made it, and whether it is fresh.
+> ODPS is the full product spec — what problem it solves, who it is for, how to get it, what it costs, and what you can build with it.
+
+Both belong in the semantic stack. ODCS sits closer to the engineering layer. ODPS sits at the product and business layer — exactly where AI agents need to operate at scale.
+
+---
+
 ## What changes from Example 3 (ODCS)
 
 | | Example 3 — ODCS (Bitol) | Example 4 — ODPS 2.0 |
