@@ -1,3 +1,10 @@
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
+
 import json
 import duckdb
 import yaml

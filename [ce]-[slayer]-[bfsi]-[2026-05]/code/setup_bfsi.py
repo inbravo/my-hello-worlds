@@ -7,6 +7,13 @@ Run once after bootstrap_bfsi.py, before running any agent.
 Requires SLayer running at http://127.0.0.1:5143:
     uvx --from 'motley-slayer[all]' slayer serve --demo
 """
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
+
 
 import os
 import sys

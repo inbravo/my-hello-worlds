@@ -6,6 +6,13 @@ Run once before any agent.
 Usage:
     python bootstrap_odps.py
 """
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
+
 
 import os
 import duckdb

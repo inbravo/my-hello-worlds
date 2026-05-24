@@ -25,6 +25,12 @@ Usage:
     python agent_odps_ollama.py
     python agent_odps_ollama.py > trace.jsonl
 """
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
 
 import json
 import yaml
@@ -186,9 +192,25 @@ final = client.chat.completions.create(
             "tool_call_id": tool_call.id,
             "content": json.dumps(data, default=str),
         },
+        {
+            "role": "user",
+            "content": "Using the tool result above, answer the question in plain English. Do not call any tools.",
+        },
     ],
 )
 answer = final.choices[0].message.content
+
+answer = final.choices[0].message.content
+
+# Guard: model made another tool call instead of answering
+if not answer and final.choices[0].message.tool_calls:
+    answer = "(Model issued a second tool call instead of answering. Raw tool args: " \
+             + json.dumps([json.loads(tc.function.arguments) for tc in final.choices[0].message.tool_calls]) + ")"
+
+# Guard: model returned nothing
+if not answer:
+    answer = "(No answer generated — check model tool_calls loop or increase context)"
+
 log.info(
     "agent.answer",
     latency_ms=int((datetime.now(timezone.utc) - t2_start).total_seconds() * 1000),

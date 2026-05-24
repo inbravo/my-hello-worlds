@@ -11,7 +11,14 @@ db.execute("""
         cet1_ratio_pct   DECIMAL(6,  4),
         combined_buffer  DECIMAL(6,  4)
     )
-""")
+"""
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
+)
 
 db.execute("""
     INSERT INTO capital_position VALUES

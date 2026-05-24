@@ -13,6 +13,13 @@ Usage:
     python agent_slayer_bfsi_ollama.py
     python agent_slayer_bfsi_ollama.py > trace.jsonl
 """
+# ─────────────────────────────────────────────────────
+# Author   : Amit Dixit
+# GitHub   : https://github.com/inbravo
+# Web      : https://inbravo.github.io
+# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# ─────────────────────────────────────────────────────
+
 
 import json
 import requests
