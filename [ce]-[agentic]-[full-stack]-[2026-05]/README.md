@@ -117,7 +117,7 @@ python3 run_comparison.py
   Freshness SLA (5 business days)           ❌        ❌      ✅       ✅          ✅
   Negative headroom → Art. 141              ❌        ❌      ❌       ❌          ✅
   ──────────────────────────────────────────────────────────────────────────────────────────
-  TOTAL                                    1/5       1/5     3/5      4/5         5/5
+  TOTAL                                    1/5       1/5     2/5      4/5         5/5
 ```
 
 > **Why Agents 1 & 2 score 1/5 and not higher:** The scoring rubric deliberately uses
@@ -151,7 +151,7 @@ python3 run_comparison.py
 
   Context layers added progressively:
   ① Schema ──► ② YAML ──► ③ ODCS ──► ④ Ontology ──► ⑤ + Metrics
-  (1/5)        (1/5)       (3/5)      (4/5)           (5/5)
+  (1/5)        (1/5)       (2/5)      (4/5)           (5/5)
 ```
 
 ---

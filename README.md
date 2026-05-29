@@ -261,7 +261,6 @@ Run the examples in this order for the clearest learning curve:
 | 8 | Example 8 — OWL/SKOS Ontology | How a formal domain ontology makes the agent domain-aware — it understands Basel III concept hierarchy, formulas, and regulatory articles, not just column names. |
 | 9 | Example 9 — dbt Metric Layer | How named, governed business metrics (MetricFlow) replace raw SQL — the metric layer enforces the formula, the agent just asks by name. |
 | 10 | Example 10 — Full Stack Comparison | One question. Five agents. Scored table. CE is not abstract — it has a measurable, demonstrable effect on answer quality. |
-| Coming | Metric layer | How named, governed metrics become agent context. |
 | 10 | Example 10 — Full Stack Comparison | One question, five agents, scored — CE's measurable payoff. The capstone. |
 
 ---
