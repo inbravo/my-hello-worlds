@@ -1,0 +1,158 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix bfsi: <https://github.com/inbravo/ce-series/ontology/bfsi#> .
+@prefix reg:  <https://github.com/inbravo/ce-series/ontology/regulation#> .
+
+# ─────────────────────────────────────────────────────────────────
+# Ontology declaration
+# ─────────────────────────────────────────────────────────────────
+bfsi: a owl:Ontology ;
+    rdfs:label "BFSI Capital Adequacy Ontology"@en ;
+    rdfs:comment "Domain ontology for Basel III/IV capital adequacy — CE series Example 8."@en .
+
+# ─────────────────────────────────────────────────────────────────
+# Regulations
+# ─────────────────────────────────────────────────────────────────
+reg:BaselIII a owl:NamedIndividual ;
+    rdfs:label "Basel III"@en ;
+    skos:definition "International regulatory framework published by the Basel Committee on Banking Supervision (BCBS). Sets minimum capital requirements, leverage ratios, and liquidity standards for banks worldwide."@en ;
+    bfsi:publisher "Bank for International Settlements (BIS)" ;
+    bfsi:effectiveDate "2013-01-01"^^xsd:date .
+
+reg:BaselIV a owl:NamedIndividual ;
+    rdfs:label "Basel IV"@en ;
+    skos:definition "Revisions finalised by the BCBS in December 2017, addressing output floors and internal model constraints. Colloquially called Basel IV though not an official BCBS designation."@en ;
+    bfsi:publisher "Bank for International Settlements (BIS)" ;
+    bfsi:effectiveDate "2025-01-01"^^xsd:date .
+
+# ─────────────────────────────────────────────────────────────────
+# Capital class hierarchy
+# ─────────────────────────────────────────────────────────────────
+bfsi:Capital a owl:Class ;
+    rdfs:label "Capital"@en ;
+    skos:definition "Financial resources held by a bank to absorb unexpected losses and protect depositors and creditors."@en .
+
+bfsi:RegulatoryCapital a owl:Class ;
+    rdfs:subClassOf bfsi:Capital ;
+    rdfs:label "Regulatory Capital"@en ;
+    skos:definition "Capital that qualifies for inclusion in a bank's capital base under the Basel regulatory framework. Divided into Tier 1 and Tier 2."@en ;
+    bfsi:governedBy reg:BaselIII .
+
+bfsi:Tier1Capital a owl:Class ;
+    rdfs:subClassOf bfsi:RegulatoryCapital ;
+    rdfs:label "Tier 1 Capital"@en ;
+    skos:definition "Going-concern capital — the highest quality regulatory capital that absorbs losses while the bank continues to operate. Comprises CET1 Capital and Additional Tier 1 Capital."@en ;
+    bfsi:minimumRequirement "6.0%"^^xsd:string ;
+    bfsi:basedOnArticle "Basel III Article 51-61"^^xsd:string .
+
+bfsi:CET1Capital a owl:Class ;
+    rdfs:subClassOf bfsi:Tier1Capital ;
+    rdfs:label "Common Equity Tier 1 Capital"@en ;
+    skos:altLabel "CET1"@en ;
+    skos:definition "The highest quality component of regulatory capital. Comprises ordinary shares, retained earnings, and other comprehensive income, net of regulatory deductions (e.g. goodwill, deferred tax assets)."@en ;
+    bfsi:minimumRequirement "4.5%"^^xsd:string ;
+    bfsi:basedOnArticle "Basel III Article 26-50"^^xsd:string ;
+    bfsi:governedBy reg:BaselIII ;
+    bfsi:columnMapping "cet1_capital_mm"^^xsd:string ;
+    bfsi:unit "Millions (MM)"^^xsd:string .
+
+bfsi:AT1Capital a owl:Class ;
+    rdfs:subClassOf bfsi:Tier1Capital ;
+    rdfs:label "Additional Tier 1 Capital"@en ;
+    skos:altLabel "AT1"@en ;
+    skos:definition "Capital instruments that are perpetual, can absorb losses via write-down or conversion to equity, and are subordinated to Tier 2 instruments. Includes contingent convertible bonds (CoCos)."@en ;
+    bfsi:basedOnArticle "Basel III Article 52-54"^^xsd:string .
+
+bfsi:Tier2Capital a owl:Class ;
+    rdfs:subClassOf bfsi:RegulatoryCapital ;
+    rdfs:label "Tier 2 Capital"@en ;
+    skos:definition "Gone-concern capital — absorbs losses only in insolvency or resolution. Includes subordinated debt with original maturity over 5 years and eligible loan-loss provisions."@en ;
+    bfsi:basedOnArticle "Basel III Article 62-65"^^xsd:string .
+
+# ─────────────────────────────────────────────────────────────────
+# Risk-Weighted Assets
+# ─────────────────────────────────────────────────────────────────
+bfsi:RiskWeightedAssets a owl:Class ;
+    rdfs:label "Risk-Weighted Assets"@en ;
+    skos:altLabel "RWA"@en ;
+    skos:definition "A bank's on- and off-balance-sheet assets weighted by credit risk, market risk, and operational risk factors as defined by Basel III. The denominator of all Basel capital ratios."@en ;
+    bfsi:governedBy reg:BaselIII ;
+    bfsi:columnMapping "rwa_mm"^^xsd:string ;
+    bfsi:unit "Millions (MM)"^^xsd:string .
+
+# ─────────────────────────────────────────────────────────────────
+# Capital Ratios
+# ─────────────────────────────────────────────────────────────────
+bfsi:CapitalRatio a owl:Class ;
+    rdfs:label "Capital Ratio"@en ;
+    skos:definition "A regulatory measure expressing a bank's capital as a percentage of its risk-weighted assets."@en .
+
+bfsi:CET1Ratio a owl:Class ;
+    rdfs:subClassOf bfsi:CapitalRatio ;
+    rdfs:label "CET1 Ratio"@en ;
+    skos:definition "The primary measure of a bank's capital strength under Basel III. A higher ratio indicates a stronger capital position."@en ;
+    bfsi:formula "CET1 Capital (MM) ÷ RWA (MM) × 100"^^xsd:string ;
+    bfsi:minimumRequirement "4.5%"^^xsd:string ;
+    bfsi:governedBy reg:BaselIII ;
+    bfsi:basedOnArticle "Basel III Article 92(1)(a)"^^xsd:string ;
+    bfsi:columnMapping "cet1_ratio_pct"^^xsd:string ;
+    bfsi:unit "Percentage (%)"^^xsd:string .
+
+# ─────────────────────────────────────────────────────────────────
+# Capital Buffers
+# ─────────────────────────────────────────────────────────────────
+bfsi:CapitalBuffer a owl:Class ;
+    rdfs:label "Capital Buffer"@en ;
+    skos:definition "Additional CET1 capital required above the regulatory minimum, designed to absorb losses during periods of stress without breaching minimum requirements."@en .
+
+bfsi:CombinedBuffer a owl:Class ;
+    rdfs:subClassOf bfsi:CapitalBuffer ;
+    rdfs:label "Combined Buffer Requirement"@en ;
+    skos:definition "The total of all applicable capital buffers that must be held as CET1 above the 4.5% minimum. Equals the sum of the capital conservation buffer plus any countercyclical and systemic risk buffers in force."@en ;
+    bfsi:basedOnArticle "Basel III Article 128-131"^^xsd:string ;
+    bfsi:governedBy reg:BaselIII ;
+    bfsi:columnMapping "combined_buffer"^^xsd:string ;
+    bfsi:unit "Percentage (%)"^^xsd:string .
+
+bfsi:CapitalConservationBuffer a owl:Class ;
+    rdfs:subClassOf bfsi:CombinedBuffer ;
+    rdfs:label "Capital Conservation Buffer"@en ;
+    skos:definition "A fixed 2.5% CET1 buffer above the 4.5% minimum, mandatory for all banks. Breaching it triggers automatic restrictions on dividends, share buybacks, and bonus payments."@en ;
+    bfsi:fixedRate "2.5%"^^xsd:string ;
+    bfsi:basedOnArticle "Basel III Article 129"^^xsd:string .
+
+bfsi:CountercyclicalBuffer a owl:Class ;
+    rdfs:subClassOf bfsi:CombinedBuffer ;
+    rdfs:label "Countercyclical Capital Buffer"@en ;
+    skos:altLabel "CCyB"@en ;
+    skos:definition "A variable CET1 buffer (0–2.5%) set by national regulators to dampen excessive credit growth and build resilience before downturns."@en ;
+    bfsi:basedOnArticle "Basel III Article 130"^^xsd:string .
+
+bfsi:SystemicRiskBuffer a owl:Class ;
+    rdfs:subClassOf bfsi:CombinedBuffer ;
+    rdfs:label "Systemic Risk Buffer"@en ;
+    skos:altLabel "G-SIB / O-SII surcharge"@en ;
+    skos:definition "Additional buffer applied to Global Systemically Important Banks (G-SIBs) or Other Systemically Important Institutions (O-SIIs), ranging from 1% to 3.5%."@en .
+
+# ─────────────────────────────────────────────────────────────────
+# Buffer Headroom (derived concept)
+# ─────────────────────────────────────────────────────────────────
+bfsi:BufferHeadroom a owl:Class ;
+    rdfs:label "Buffer Headroom"@en ;
+    skos:definition "The excess of a bank's actual CET1 ratio above the combined buffer requirement. Expressed in percentage points. Positive headroom means the bank is fully compliant. If headroom turns negative, distributions are restricted."@en ;
+    bfsi:formula "CET1 Ratio (%) − Combined Buffer Requirement (%)"^^xsd:string ;
+    bfsi:unit "Percentage points (pp)"^^xsd:string .
+
+# ─────────────────────────────────────────────────────────────────
+# OBML-style column annotations (mapping DB columns to concepts)
+# ─────────────────────────────────────────────────────────────────
+bfsi:col_reporting_date a owl:DatatypeProperty ;
+    rdfs:label "reporting_date"@en ;
+    skos:definition "The quarter-end date to which the capital position applies (e.g. 2026-03-31 = Q1 2026)."@en .
+
+bfsi:col_entity a owl:DatatypeProperty ;
+    rdfs:label "entity"@en ;
+    skos:definition "Legal entity identifier for the reporting bank holding company (e.g. BANK_HOLDCO)."@en .
