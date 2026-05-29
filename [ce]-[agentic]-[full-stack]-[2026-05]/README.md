@@ -24,11 +24,11 @@ semantic layer to answer correctly:
 
 | Part | Requires | Scored as |
 |---|---|---|
-| CET1 ratio value | Data (DuckDB) | "14.83" verbatim in answer |
-| Basel III floor (4.5%) | Domain ontology (OWL/SKOS) | "4.5" + "minimum/floor/requirement" |
-| Owner: Treasury Risk Team | ODCS contract | Exact string "Treasury Risk Team" |
-| Freshness SLA (5 business days) | ODCS contract | "5 business days" or "P5D" |
-| Negative headroom → Article 141 | Domain ontology | "141" or "dividend/buyback restriction" |
+| CET1 ratio value | Data (DuckDB) | `"14.83"` verbatim in answer |
+| Regulation cited (Basel III Art. 92) | OWL/SKOS ontology | `"Article 92"` or `"Art. 92"` — only in the TTL file |
+| Owner: Treasury Risk Team | ODCS contract | Exact string `"Treasury Risk Team"` — only in the ODCS YAML |
+| Freshness SLA (5 business days) | ODCS contract | `"5 business days"` or `"P5D"` — only in the ODCS YAML |
+| Negative headroom → Art. 141 | OWL/SKOS ontology | `"141"` or `"dividend"` / `"buyback"` |
 
 No single earlier example answers all five.
 
@@ -109,15 +109,15 @@ python3 run_comparison.py
 ▶ Running Agent 4 — + OWL/SKOS Domain Ontology ...   Score: 4/5
 ▶ Running Agent 5 — Full Stack (all layers) ...       Score: 5/5
 
-  Criterion                          Baseline  + YAML    + ODCS    + Ontology  Full Stack
-  ─────────────────────────────────────────────────────────────────────────────────────────
-  CET1 ratio value (14.83%)            ✅        ✅        ✅         ✅          ✅
-  Basel III floor cited (4.5%)         ❌        ❌        ❌         ✅          ✅
-  Owner: Treasury Risk Team            ❌        ❌        ✅         ✅          ✅
-  Freshness SLA (5 business days)      ❌        ❌        ✅         ✅          ✅
-  Negative headroom → Art. 141         ❌        ❌        ❌         ❌          ✅
-  ─────────────────────────────────────────────────────────────────────────────────────────
-  TOTAL                               1/5       1/5       3/5        4/5         5/5
+  Criterion                               Baseline  + YAML  + ODCS  + Ontology  Full Stack
+  ──────────────────────────────────────────────────────────────────────────────────────────
+  CET1 ratio value (14.83%)                 ✅        ✅      ✅       ✅          ✅
+  Regulation cited (Basel III Art. 92)      ❌        ❌      ❌       ✅          ✅
+  Owner: Treasury Risk Team                 ❌        ❌      ✅       ✅          ✅
+  Freshness SLA (5 business days)           ❌        ❌      ✅       ✅          ✅
+  Negative headroom → Art. 141              ❌        ❌      ❌       ❌          ✅
+  ──────────────────────────────────────────────────────────────────────────────────────────
+  TOTAL                                    1/5       1/5     3/5      4/5         5/5
 ```
 
 > **Why Agents 1 & 2 score 1/5 and not higher:** The scoring rubric deliberately uses
