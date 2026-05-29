@@ -262,7 +262,7 @@ Run the examples in this order for the clearest learning curve:
 | 9 | Example 9 — dbt Metric Layer | How named, governed business metrics (MetricFlow) replace raw SQL — the metric layer enforces the formula, the agent just asks by name. |
 | 10 | Example 10 — Full Stack Comparison | One question. Five agents. Scored table. CE is not abstract — it has a measurable, demonstrable effect on answer quality. |
 | Coming | Metric layer | How named, governed metrics become agent context. |
-| Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
+| 10 | Example 10 — Full Stack Comparison | One question, five agents, scored — CE's measurable payoff. The capstone. |
 
 ---
 

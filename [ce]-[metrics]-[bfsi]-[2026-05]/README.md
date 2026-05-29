@@ -186,7 +186,7 @@ is enforced by MetricFlow, not left to the agent or analyst to implement.
 | [Ex 6–7](../[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/README.md) | SLayer MCP | Zero-code semantic queries |
 | [Ex 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS Ontology | Domain concept hierarchy |
 | **Ex 9 (this)** | **dbt Metric Layer** | **Named governed metrics — formula enforced, not assumed** |
-| Ex 10 | Full stack | Coming |
+| [Ex 10](../[ce]-[agentic]-[full-stack]-[2026-05]/README.md) | Full stack comparison | One question, five agents, scored — CE's measurable payoff |
 
 ---
 

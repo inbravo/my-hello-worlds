@@ -200,7 +200,7 @@ appear automatically in the tool list.
 | [Example 7](../[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/README.md) | Semantic layer via MCP (BFSI) | No — Claude Desktop |
 | [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Yes — `agent_ontology_ollama.py` |
 | [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Yes — `agent_metrics_ollama.py` |
-| Example 10 | Full stack comparison | Coming |
+| [Example 10](../[ce]-[agentic]-[full-stack]-[2026-05]/README.md) | Full stack comparison | One question, five agents, scored — CE's measurable payoff |
 
 ---
 

@@ -199,7 +199,7 @@ Then ask the same capital adequacy questions directly in Claude Code.
 | **Example 7 (this)** | **Semantic layer via MCP (BFSI)** | **Capital adequacy via MCP — no Python** |
 | [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Concept hierarchy, Basel III articles |
 | [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Named governed metrics |
-| Example 10 | Full stack comparison | Coming |
+| [Example 10](../[ce]-[agentic]-[full-stack]-[2026-05]/README.md) | Full stack comparison | One question, five agents, scored — CE's measurable payoff |
 
 ---
 
