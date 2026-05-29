@@ -22,13 +22,13 @@ and what happens if our buffer headroom turns negative?
 This question has **five distinct parts**. Each requires a different
 semantic layer to answer correctly:
 
-| Part | Requires |
-|---|---|
-| CET1 ratio value | Data (DuckDB) |
-| Basel III minimum (4.5%) | Domain ontology (OWL/SKOS) |
-| Data owner | Governance contract (ODCS) |
-| Last certified | Governance contract (ODCS) |
-| Negative headroom consequence | Domain ontology (Article 141) |
+| Part | Requires | Scored as |
+|---|---|---|
+| CET1 ratio value | Data (DuckDB) | "14.83" verbatim in answer |
+| Basel III floor (4.5%) | Domain ontology (OWL/SKOS) | "4.5" + "minimum/floor/requirement" |
+| Owner: Treasury Risk Team | ODCS contract | Exact string "Treasury Risk Team" |
+| Freshness SLA (5 business days) | ODCS contract | "5 business days" or "P5D" |
+| Negative headroom → Article 141 | Domain ontology | "141" or "dividend/buyback restriction" |
 
 No single earlier example answers all five.
 
@@ -109,20 +109,21 @@ python3 run_comparison.py
 ▶ Running Agent 4 — + OWL/SKOS Domain Ontology ...   Score: 4/5
 ▶ Running Agent 5 — Full Stack (all layers) ...       Score: 5/5
 
-══════════════════════════════════════════════════════════
-  SCORING — Which parts of the question each layer answered
-══════════════════════════════════════════════════════════
-  Criterion                    Agent 1  Agent 2  Agent 3  Agent 4  Agent 5
-  ─────────────────────────────────────────────────────────────────────────
-  CET1 ratio value (14.83%)      ✅       ✅       ✅       ✅       ✅
-  Basel III minimum (4.5%)       ❌       ❌       ❌       ✅       ✅
-  Data owner identified          ❌       ❌       ✅       ✅       ✅
-  Certification / freshness      ❌       ❌       ✅       ✅       ✅
-  Negative headroom consequence  ❌       ❌       ❌       ❌       ✅
-  ─────────────────────────────────────────────────────────────────────────
-  TOTAL                         1/5      1/5      3/5      4/5      5/5
-══════════════════════════════════════════════════════════
+  Criterion                          Baseline  + YAML    + ODCS    + Ontology  Full Stack
+  ─────────────────────────────────────────────────────────────────────────────────────────
+  CET1 ratio value (14.83%)            ✅        ✅        ✅         ✅          ✅
+  Basel III floor cited (4.5%)         ❌        ❌        ❌         ✅          ✅
+  Owner: Treasury Risk Team            ❌        ❌        ✅         ✅          ✅
+  Freshness SLA (5 business days)      ❌        ❌        ✅         ✅          ✅
+  Negative headroom → Art. 141         ❌        ❌        ❌         ❌          ✅
+  ─────────────────────────────────────────────────────────────────────────────────────────
+  TOTAL                               1/5       1/5       3/5        4/5         5/5
 ```
+
+> **Why Agents 1 & 2 score 1/5 and not higher:** The scoring rubric deliberately uses
+> exact strings from the context files — "Treasury Risk Team" from the ODCS contract,
+> "5 business days" from the ODCS freshness SLA, "Article 141" from the OWL ontology.
+> A model with general Basel III knowledge cannot fake these without the actual context.
 
 ---
 

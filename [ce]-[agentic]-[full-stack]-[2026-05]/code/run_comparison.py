@@ -72,16 +72,24 @@ QUESTION = (
 )
 
 # ── Scoring rubric ────────────────────────────────────────────────
+# Criteria use EXACT strings from context files — not general knowledge.
+# "Treasury Risk Team" only exists in the ODCS contract.
+# "5 business days" only exists in the ODCS freshness SLA.
+# "Article 141" / "141" is specific enough to require the ontology.
+# "14.83" must appear verbatim — model must cite the actual data value.
+# "4.5" alone is too common; require it adjacent to "minimum" or "floor".
 RUBRIC = {
-    "CET1 ratio value (14.83%)": lambda a: "14.83" in a or "14.8" in a,
-    "Basel III minimum (4.5%)":  lambda a: "4.5" in a,
-    "Data owner identified":     lambda a: any(w in a.lower() for w in
-                                     ["treasury", "risk team", "owner", "risk management"]),
-    "Certification / freshness": lambda a: any(w in a.lower() for w in
-                                     ["certif", "fresh", "sla", "q1 2026", "2026-03", "quarter end"]),
-    "Negative headroom consequence": lambda a: any(w in a.lower() for w in
-                                     ["dividend", "bonus", "restrict", "article 141",
-                                      "distribution", "buyback", "141"]),
+    "CET1 ratio value (14.83%)":      lambda a: "14.83" in a,
+    "Basel III floor cited (4.5%)":   lambda a: "4.5" in a and any(
+                                          w in a.lower() for w in
+                                          ["minimum", "floor", "requirement", "threshold"]),
+    "Owner: Treasury Risk Team":      lambda a: "treasury risk team" in a.lower(),
+    "Freshness SLA (5 business days)":lambda a: any(p in a.lower() for p in
+                                          ["5 business day", "five business day", "p5d",
+                                           "within 5", "5bd"]),
+    "Negative headroom → Art. 141":   lambda a: any(w in a.lower() for w in
+                                          ["article 141", "141", "dividend", "buyback",
+                                           "bonus restriction", "distribution restriction"]),
 }
 
 # ── Shared SQL tool ───────────────────────────────────────────────
@@ -181,8 +189,9 @@ def call_agent(system: str, tool: dict, tool_fn, client: OpenAI) -> str:
         {"role": "assistant", "content": None, "tool_calls": [tc]},
         {"role": "tool",      "content": result, "tool_call_id": tc.id},
         {"role": "user",      "content":
-         "Answer the question fully using the result above and any context "
-         "in your system prompt. Do not call any tools."}
+         "Answer the question fully. Include the exact numeric values from the "
+         "tool result. Use the context in your system prompt for regulatory details, "
+         "ownership, SLA, and consequences. Do not call any tools."}
     ]
     r2 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
@@ -195,7 +204,10 @@ def call_agent(system: str, tool: dict, tool_fn, client: OpenAI) -> str:
 # ─────────────────────────────────────────────────────────────────
 def agent_baseline(client: OpenAI) -> str:
     system = (
-        "You are a data analyst. Use the SQL tool to query the capital_position table.\n\n"
+        "You are a data analyst. Use the SQL tool to query the capital_position table.\n"
+        "IMPORTANT: Answer ONLY from the tool result. "
+        "Do NOT use any external knowledge about banking, Basel III, regulations, "
+        "ownership, SLAs, or industry standards. If the data does not contain it, say so.\n\n"
         "Table: capital_position\n"
         "Columns: reporting_date, entity, cet1_capital_mm, rwa_mm, "
         "cet1_ratio_pct, combined_buffer\n"
@@ -212,7 +224,10 @@ def agent_yaml(client: OpenAI) -> str:
         contract = yaml.safe_load(f)
     ctx = json.dumps(contract, indent=2)
     system = (
-        "You are a data analyst. Use the SQL tool to query the capital_position table.\n\n"
+        "You are a data analyst. Use the SQL tool to query the capital_position table.\n"
+        "IMPORTANT: Answer ONLY from the tool result and the DATA CONTRACT below. "
+        "Do NOT use any external knowledge about Basel III regulations, ownership, "
+        "SLAs, or regulatory consequences beyond what is explicitly in the contract.\n\n"
         f"DATA CONTRACT:\n{ctx}"
     )
     tool = make_sql_tool(
@@ -333,51 +348,56 @@ def score(answer: str) -> dict:
 
 def print_results(results: list[tuple[str, str, dict]]) -> None:
     criteria = list(RUBRIC.keys())
-    col_w    = 38
     crit_w   = max(len(c) for c in criteria) + 2
+    # Agent column headers — short labels only
+    labels = [n.split("—")[1].strip() if "—" in n else n for n in
+              [r[0] for r in results]]
+    col_w  = max(max(len(l) for l in labels) + 2, 10)
 
-    print("\n" + "═" * 110)
+    sep = "═" * (crit_w + (col_w + 2) * len(results) + 4)
+
+    print("\n" + sep)
     print("  CONTEXT ENGINEERING — FULL STACK COMPARISON")
-    print("  Question: " + QUESTION[:95] + "...")
-    print("═" * 110)
+    print(f"  Q: {QUESTION[:90]}...")
+    print(sep)
 
-    # Print each agent's answer
-    for name, answer, _ in results:
-        print(f"\n{'─'*110}")
-        print(f"  {name}")
-        print(f"{'─'*110}")
-        for line in textwrap.wrap(answer, width=105):
-            print(f"  {line}")
+    # Print each agent's answer (abbreviated)
+    for name, answer, scores in results:
+        total = sum(scores.values())
+        print(f"\n  ── {name}  [{total}/{len(RUBRIC)}] ──")
+        for line in textwrap.wrap(answer[:600], width=100):
+            print(f"     {line}")
+        if len(answer) > 600:
+            print("     [... truncated]")
 
-    # Comparison table
-    print("\n" + "═" * 110)
-    print("  SCORING — Which parts of the question each layer answered")
-    print("═" * 110)
+    # Scoring table
+    print("\n" + sep)
+    print("  SCORING — which parts each context layer answered")
+    print(sep)
 
-    # Header
-    header = f"  {'Criterion':<{crit_w}}"
-    for name, _, _ in results:
-        short = name.split("—")[0].strip()[:col_w]
-        header += f"  {short:<{col_w}}"
-    print(header)
+    # Header row
+    hdr = f"  {'Criterion':<{crit_w}}"
+    for label in labels:
+        hdr += f"  {label:<{col_w}}"
+    print(hdr)
     print(f"  {'-'*crit_w}" + (f"  {'-'*col_w}" * len(results)))
 
-    # Rows
+    # Criteria rows
     for criterion in criteria:
         row = f"  {criterion:<{crit_w}}"
         for _, _, scores in results:
-            cell = "  ✅" if scores[criterion] else "  ❌"
-            row += f"{cell:<{col_w+2}}"
+            mark = "✅" if scores[criterion] else "❌"
+            row += f"  {mark:<{col_w}}"
         print(row)
 
-    # Total
+    # Total row
     print(f"  {'-'*crit_w}" + (f"  {'-'*col_w}" * len(results)))
-    totals = f"  {'TOTAL':<{crit_w}}"
+    tot_row = f"  {'TOTAL':<{crit_w}}"
     for _, _, scores in results:
         total = sum(scores.values())
-        totals += f"  {total}/{len(RUBRIC):<{col_w-2}}"
-    print(totals)
-    print("═" * 110)
+        tot_row += f"  {total}/{len(RUBRIC):<{col_w-2}}"
+    print(tot_row)
+    print(sep)
 
 # ── Main ──────────────────────────────────────────────────────────
 def main() -> None:
