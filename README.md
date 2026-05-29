@@ -5,7 +5,7 @@ Minimal, working examples across the agentic AI stack — MCP servers, agent fra
 
 ## Repository Structure
 
-This repository contains **nine examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
+This repository contains **ten examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
 
 ### 📂 Directory Listing
 
@@ -20,6 +20,7 @@ This repository contains **nine examples** organized in separate folders, each i
 | 7 | [[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic layer via MCP — BFSI | Same Basel III/IV capital adequacy data as Example 3, now over MCP. Zero agent code |
 | 8 | [[ce]-[ontology]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bontology%5D-%5Bbfsi%5D-%5B2026-05%5D) | OWL/SKOS domain ontology | 15-class BFSI ontology parsed by rdflib. Agent understands concept hierarchy, Basel III articles, and formulas — domain-aware, not just schema-aware |
 | 9 | [[ce]-[metrics]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bmetrics%5D-%5Bbfsi%5D-%5B2026-05%5D) | dbt Metric Layer (MetricFlow) | 5 named governed metrics — cet1_ratio, buffer_headroom, rwa, cet1_capital, combined_buffer. Agent calls mf query, never writes SQL |
+| 10 | [[ce]-[agentic]-[full-stack]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bagentic%5D-%5Bfull-stack%5D-%5B2026-05%5D) | Full stack comparison | One question through all 9 context layers. Scored side-by-side table proves CE has a measurable effect on answer quality |
 
 ---
 
@@ -259,7 +260,7 @@ Run the examples in this order for the clearest learning curve:
 | 7 | Example 7 — SLayer MCP (BFSI) | Same semantic model, same data — zero Python. MCP transport changes everything about the client, nothing about the semantics. |
 | 8 | Example 8 — OWL/SKOS Ontology | How a formal domain ontology makes the agent domain-aware — it understands Basel III concept hierarchy, formulas, and regulatory articles, not just column names. |
 | 9 | Example 9 — dbt Metric Layer | How named, governed business metrics (MetricFlow) replace raw SQL — the metric layer enforces the formula, the agent just asks by name. |
-| Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
+| 10 | Example 10 — Full Stack Comparison | One question. Five agents. Scored table. CE is not abstract — it has a measurable, demonstrable effect on answer quality. |
 | Coming | Metric layer | How named, governed metrics become agent context. |
 | Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
 
