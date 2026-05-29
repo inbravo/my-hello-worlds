@@ -1,0 +1,7 @@
+bfsi_metrics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: capital_bfsi.duckdb
+      threads: 1

@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: capital_position
+    description: "BFSI capital adequacy position — three quarters of Basel III/IV data for BANK_HOLDCO"
+    columns:
+      - name: reporting_date
+        description: "Quarter-end reporting date"
+      - name: entity
+        description: "Legal entity identifier (BANK_HOLDCO)"
+      - name: cet1_capital_mm
+        description: "Common Equity Tier 1 Capital in millions"
+      - name: rwa_mm
+        description: "Risk-Weighted Assets in millions"
+      - name: cet1_ratio_pct
+        description: "CET1 Ratio as a percentage — formula: CET1 Capital / RWA × 100"
+      - name: combined_buffer
+        description: "Combined Buffer Requirement as a percentage (Basel III Article 128-131)"
+
+semantic_models:
+  - name: capital_position_sm
+    description: "Semantic model for BFSI capital adequacy — exposes Basel III metrics"
+    model: ref('capital_position')
+    defaults:
+      agg_time_dimension: reporting_date
+
+    entities:
+      - name: bank_entity
+        type: primary
+        expr: entity
+
+    dimensions:
+      - name: reporting_date
+        type: time
+        type_params:
+          time_granularity: month
+      - name: entity
+        type: categorical
+
+    measures:
+      - name: cet1_capital_total
+        description: "Total CET1 Capital in millions"
+        agg: sum
+        expr: cet1_capital_mm
+
+      - name: rwa_total
+        description: "Total Risk-Weighted Assets in millions"
+        agg: sum
+        expr: rwa_mm
+
+      - name: cet1_ratio_avg
+        description: "CET1 Ratio (percentage)"
+        agg: average
+        expr: cet1_ratio_pct
+
+      - name: combined_buffer_avg
+        description: "Combined Buffer Requirement (percentage)"
+        agg: average
+        expr: combined_buffer
+
+metrics:
+  - name: cet1_ratio
+    description: >
+      CET1 Capital Ratio — the primary Basel III capital adequacy measure.
+      Formula: CET1 Capital (MM) / RWA (MM) × 100.
+      Regulatory minimum: 4.5% (Basel III Article 92).
+      Owner: Treasury Risk. Certified for regulatory reporting.
+    label: "CET1 Ratio (%)"
+    type: simple
+    type_params:
+      measure: cet1_ratio_avg
+
+  - name: combined_buffer_requirement
+    description: >
+      Combined Buffer Requirement — the total CET1 buffer required above
+      the 4.5% minimum. Comprises the capital conservation buffer (2.5%)
+      plus any countercyclical and systemic risk buffers in force.
+      Governed by Basel III Article 128-131.
+    label: "Combined Buffer Requirement (%)"
+    type: simple
+    type_params:
+      measure: combined_buffer_avg
+
+  - name: cet1_capital
+    description: >
+      Total CET1 Capital in millions. The highest quality regulatory capital —
+      ordinary shares, retained earnings, and other comprehensive income,
+      net of regulatory deductions (goodwill, deferred tax assets).
+      Subclass of Tier 1 Capital. Governed by Basel III Article 26-50.
+    label: "CET1 Capital (MM)"
+    type: simple
+    type_params:
+      measure: cet1_capital_total
+
+  - name: rwa
+    description: >
+      Total Risk-Weighted Assets in millions. The denominator of all Basel
+      capital ratios — on- and off-balance-sheet assets weighted by credit
+      risk, market risk, and operational risk factors.
+      Governed by Basel III. Column: rwa_mm.
+    label: "Risk-Weighted Assets (MM)"
+    type: simple
+    type_params:
+      measure: rwa_total
+
+  - name: buffer_headroom
+    description: >
+      Buffer Headroom in percentage points — the excess of the actual CET1
+      ratio above the combined buffer requirement. Positive headroom means
+      full compliance. If headroom turns negative, Basel III Article 141
+      triggers automatic restrictions on dividends, share buybacks, and bonuses.
+      Formula: CET1 Ratio (%) − Combined Buffer Requirement (%).
+    label: "Buffer Headroom (pp)"
+    type: derived
+    type_params:
+      expr: cet1_ratio - combined_buffer_requirement
+      metrics:
+        - name: cet1_ratio
+        - name: combined_buffer_requirement
