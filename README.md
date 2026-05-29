@@ -5,7 +5,7 @@ Minimal, working examples across the agentic AI stack — MCP servers, agent fra
 
 ## Repository Structure
 
-This repository contains **seven examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
+This repository contains **eight examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
 
 ### 📂 Directory Listing
 
@@ -18,6 +18,7 @@ This repository contains **seven examples** organized in separate folders, each 
 | 5 | [[ce]-[odps]-[trade]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bodps%5D-%5Btrade%5D-%5B2026-05%5D) | Data product (ODPS 2.0) | Steps up from table governance to product governance — ports, use cases, SLAs. New domain: Trade Finance |
 | 6 | [[ce]-[slayer]-[mcp]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5B2026-05%5D) | Semantic layer via MCP — generic | Transport upgrade — same semantic layer, now accessed via MCP stdio. Claude Desktop is the agent. No Python |
 | 7 | [[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic layer via MCP — BFSI | Same Basel III/IV capital adequacy data as Example 3, now over MCP. Zero agent code |
+| 8 | [[ce]-[ontology]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bontology%5D-%5Bbfsi%5D-%5B2026-05%5D) | OWL/SKOS domain ontology | 15-class BFSI ontology parsed by rdflib. Agent understands concept hierarchy, Basel III articles, and formulas — domain-aware, not just schema-aware |
 
 ---
 
@@ -214,6 +215,34 @@ claude mcp add slayer -- uvx --from 'motley-slayer[all]' slayer mcp
 
 ---
 
+### Example 8: OWL/SKOS Domain Ontology — BFSI
+
+**Semantic component:** Ontology (Component 2 — OWL/SKOS + OBML-style annotations)
+
+**What it shows:**
+- A 15-class BFSI capital adequacy ontology in Turtle format, parsed at runtime by `rdflib`. The agent's tool description is built dynamically from the ontology — not hand-crafted.
+- The agent understands the full concept hierarchy (`CET1Capital ⊂ Tier1Capital ⊂ RegulatoryCapital`), Basel III article references, formulas, minimum requirements, and OBML-style column-to-concept mappings.
+- Previous examples made the agent schema-aware. This makes it **domain-aware** — it can answer regulatory and conceptual questions without querying the database at all.
+
+**Quick Start:**
+```bash
+cd my-hello-worlds/[ce]-[ontology]-[bfsi]-[2026-05]/code
+pip install duckdb rdflib openai structlog
+ollama serve && ollama pull qwen2.5
+python3 bootstrap_ontology.py && python3 agent_ontology_ollama.py
+```
+
+**Try domain questions:**
+```
+python3 agent_ontology_ollama.py "Is CET1 Capital a subset of Tier 1 Capital?"
+python3 agent_ontology_ollama.py "What regulation governs the combined buffer requirement?"
+python3 agent_ontology_ollama.py "What is our CET1 ratio vs the Basel III minimum?"
+```
+
+**Options:** Anthropic API (`agent_ontology.py`) or Ollama (`agent_ontology_ollama.py`)
+
+---
+
 ## 📈 Learning Progression
 
 Run the examples in this order for the clearest learning curve:
@@ -227,7 +256,8 @@ Run the examples in this order for the clearest learning curve:
 | 5 | Example 5 — ODPS (Trade Finance) | How a data product definition governs at the capability level — ports, use cases, pricing. |
 | 6 | Example 6 — SLayer MCP (Jaffle Shop) | How MCP replaces the REST agent loop entirely. Claude Desktop becomes the agent. |
 | 7 | Example 7 — SLayer MCP (BFSI) | Same semantic model, same data — zero Python. MCP transport changes everything about the client, nothing about the semantics. |
-| Coming | Ontology (OWL/RDF + OBML) | How domain knowledge elevates agent reasoning beyond schema. |
+| 8 | Example 8 — OWL/SKOS Ontology | How a formal domain ontology makes the agent domain-aware — it understands Basel III concept hierarchy, formulas, and regulatory articles, not just column names. |
+| Coming | Metric layer | How named, governed metrics become agent context. |
 | Coming | Metric layer | How named, governed metrics become agent context. |
 | Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
 
@@ -407,6 +437,46 @@ Run `setup_mcp_bfsi.py` once against the REST server — the MCP server picks up
 
 ---
 
+### Example 8: OWL/SKOS Domain Ontology
+
+```
+┌──────────────────────────────────────────────────────┐
+│           OWL/SKOS Ontology — bfsi_capital.ttl       │
+│                                                      │
+│  CET1Capital ⊂ Tier1Capital ⊂ RegulatoryCapital      │
+│  Formula: CET1 ÷ RWA × 100                          │
+│  Min requirement: 4.5% (Basel III Article 92)        │
+│  DB column: cet1_ratio_pct  (OBML annotation)        │
+└──────────────────────┬───────────────────────────────┘
+                       │  rdflib parses at startup
+                       ▼
+       ┌───────────────────────────────────┐
+       │   Tool Description (built once)   │
+       │   15 concepts · regulations ·     │
+       │   formulas · column mappings      │
+       └──────────────────┬────────────────┘
+                          │  injected into tool
+                          ▼
+       ┌───────────────────────────────────┐
+       │          LLM Agent               │
+       │  Domain-aware: knows Basel III    │
+       │  hierarchy, not just schema       │
+       └─────────┬─────────────┬──────────┘
+                 │             │
+         data Qs │    domain Qs│ (answered from
+                 │             │  ontology, no DB)
+                 ▼             ▼
+       ┌──────────────┐   ┌──────────────────────────┐
+       │    DuckDB    │   │  "CET1 ⊂ Tier1 ⊂         │
+       │  capital_    │   │   RegulatoryCapital.      │
+       │  position    │   │   Min 4.5% per Art. 92." │
+       └──────────────┘   └──────────────────────────┘
+```
+
+**Key difference from Example 4 (ODCS):** ODCS adds governance metadata to a schema. An ontology encodes the domain knowledge itself — the agent knows *what* CET1 Capital *is*, not just that the column exists.
+
+---
+
 ## 📚 Glossary
 
 | Term | Definition |
@@ -423,6 +493,11 @@ Run `setup_mcp_bfsi.py` once against the REST server — the MCP server picks up
 | **Ollama** | Local LLM inference engine. Runs models like qwen2.5 on your machine without cloud APIs. |
 | **MCP** | Model Context Protocol. Open standard for agents to discover and query semantic models and tools. |
 | **LLM** | Large Language Model (Claude, GPT-4, Qwen). Powers the agent's reasoning and language understanding. |
+| **Ontology** | A formal, machine-readable representation of domain knowledge — concepts, relationships, and properties. OWL and SKOS are the W3C standards for building ontologies. |
+| **OWL** | Web Ontology Language. W3C standard for defining class hierarchies, logical relationships, and properties in machine-readable form. |
+| **SKOS** | Simple Knowledge Organisation System. W3C standard for human-readable concept labels, definitions, and broader/narrower relationships. |
+| **rdflib** | Python library for parsing and querying RDF/OWL/SKOS ontologies in Turtle (.ttl) and other RDF formats. |
+| **OBML** | Ontology-Based Markup Language. Annotates data columns with ontology concept URIs, bridging the database schema and the domain model. |
 | **YAML** | Human-readable data format. Used for data contracts and configuration. |
 
 ---
