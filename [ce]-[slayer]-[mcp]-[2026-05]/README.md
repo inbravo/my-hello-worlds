@@ -192,14 +192,15 @@ appear automatically in the tool list.
 | Example | Semantic component | Agent code required |
 |---------|-------------------|---------------------|
 | [Example 1](../[ce]-[hello-world]-[2026-05]/README.md) | Hand-written YAML contract | Yes — `agent.py` |
-| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model (SLayer REST) | Yes — `agent_slayer_hw.py` |
-| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — BFSI (SLayer REST) | Yes — `agent_slayer_bfsi.py` |
+| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model — SLayer REST (generic) | Yes — `agent_slayer_hw.py` |
+| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — SLayer REST (BFSI) | Yes — `agent_slayer_bfsi.py` |
 | [Example 4](../[ce]-[odcs]-[bfsi]-[2026-05]/README.md) | Formal ODCS contract | Yes — `agent_odcs.py` |
 | [Example 5](../[ce]-[odps]-[trade]-[2026-05]/README.md) | Data product (ODPS 2.0) | Yes — `agent_odps.py` |
-| **Example 6 (this)** | **SLayer via MCP** | **No — Claude Desktop only** |
-| Example 7 | Ontology (OWL/RDF + OBML) | Coming |
-| Example 8 | Metric layer | Coming |
-| Example 9 | Full stack comparison | Coming |
+| **Example 6 (this)** | **Semantic layer via MCP (generic)** | **No — Claude Desktop / Claude Code** |
+| [Example 7](../[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/README.md) | Semantic layer via MCP (BFSI) | No — Claude Desktop |
+| [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Yes — `agent_ontology_ollama.py` |
+| [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Yes — `agent_metrics_ollama.py` |
+| Example 10 | Full stack comparison | Coming |
 
 ---
 

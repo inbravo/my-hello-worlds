@@ -5,7 +5,7 @@ Minimal, working examples across the agentic AI stack — MCP servers, agent fra
 
 ## Repository Structure
 
-This repository contains **eight examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
+This repository contains **nine examples** organized in separate folders, each introducing a new semantic component in the Context Engineering ladder:
 
 ### 📂 Directory Listing
 
@@ -19,6 +19,7 @@ This repository contains **eight examples** organized in separate folders, each 
 | 6 | [[ce]-[slayer]-[mcp]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5B2026-05%5D) | Semantic layer via MCP — generic | Transport upgrade — same semantic layer, now accessed via MCP stdio. Claude Desktop is the agent. No Python |
 | 7 | [[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bslayer%5D-%5Bmcp%5D-%5Bbfsi%5D-%5B2026-05%5D) | Semantic layer via MCP — BFSI | Same Basel III/IV capital adequacy data as Example 3, now over MCP. Zero agent code |
 | 8 | [[ce]-[ontology]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bontology%5D-%5Bbfsi%5D-%5B2026-05%5D) | OWL/SKOS domain ontology | 15-class BFSI ontology parsed by rdflib. Agent understands concept hierarchy, Basel III articles, and formulas — domain-aware, not just schema-aware |
+| 9 | [[ce]-[metrics]-[bfsi]-[2026-05]](https://github.com/inbravo/my-hello-worlds/tree/main/%5Bce%5D-%5Bmetrics%5D-%5Bbfsi%5D-%5B2026-05%5D) | dbt Metric Layer (MetricFlow) | 5 named governed metrics — cet1_ratio, buffer_headroom, rwa, cet1_capital, combined_buffer. Agent calls mf query, never writes SQL |
 
 ---
 
@@ -257,7 +258,8 @@ Run the examples in this order for the clearest learning curve:
 | 6 | Example 6 — SLayer MCP (Jaffle Shop) | How MCP replaces the REST agent loop entirely. Claude Desktop becomes the agent. |
 | 7 | Example 7 — SLayer MCP (BFSI) | Same semantic model, same data — zero Python. MCP transport changes everything about the client, nothing about the semantics. |
 | 8 | Example 8 — OWL/SKOS Ontology | How a formal domain ontology makes the agent domain-aware — it understands Basel III concept hierarchy, formulas, and regulatory articles, not just column names. |
-| Coming | Metric layer | How named, governed metrics become agent context. |
+| 9 | Example 9 — dbt Metric Layer | How named, governed business metrics (MetricFlow) replace raw SQL — the metric layer enforces the formula, the agent just asks by name. |
+| Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
 | Coming | Metric layer | How named, governed metrics become agent context. |
 | Coming | Full stack comparison | One question. All layers. Measurable quality difference. |
 
@@ -477,6 +479,70 @@ Run `setup_mcp_bfsi.py` once against the REST server — the MCP server picks up
 
 ---
 
+### Example 9: dbt Metric Layer — BFSI (MetricFlow)
+
+**Semantic component:** Metric Layer (Component 5 — named, governed business metrics)
+
+**What it shows:**
+- Five Basel III metrics defined in MetricFlow YAML: `cet1_ratio`, `combined_buffer_requirement`, `cet1_capital`, `rwa`, and `buffer_headroom` (a derived metric: `cet1_ratio − combined_buffer_requirement`).
+- The agent calls `mf query` via subprocess — it never writes SQL. MetricFlow compiles the SQL, enforces the formula, and returns typed results.
+- Every consumer of `cet1_ratio` gets the same number from the same governed definition. One metric. One truth.
+
+**Quick Start:**
+```bash
+pip install dbt-core dbt-duckdb dbt-metricflow openai structlog
+ollama pull qwen2.5
+cd my-hello-worlds/[ce]-[metrics]-[bfsi]-[2026-05]/code
+python3 bootstrap_metrics.py   # dbt run + mf validate-configs
+python3 agent_metrics_ollama.py
+```
+
+**Or query metrics directly from the CLI (no agent needed):**
+```bash
+cd my-hello-worlds/[ce]-[metrics]-[bfsi]-[2026-05]/dbt_project
+mf query --metrics cet1_ratio,buffer_headroom --group-by metric_time__month
+```
+
+---
+
+### Example 9: Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│           schema.yml — MetricFlow Catalogue         │
+│  cet1_ratio      (simple · min 4.5% · Art. 92)     │
+│  buffer_headroom (derived: cet1_ratio − buffer)     │
+│  cet1_capital    (simple · Art. 26-50)              │
+│  rwa             (simple · Basel III)               │
+│  combined_buffer (simple · Art. 128-131)            │
+└──────────────────────┬──────────────────────────────┘
+                       │  read at startup → tool description
+                       ▼
+       ┌───────────────────────────────────┐
+       │          LLM Agent               │
+       │  Knows metric definitions,       │
+       │  ownership, Basel III thresholds │
+       └──────────────┬────────────────────┘
+                      │  tool call: query_metric
+                      │  {metrics: ["cet1_ratio","buffer_headroom"],
+                      │   group_by: ["metric_time__month"]}
+                      ▼
+       ┌───────────────────────────────────┐
+       │   mf query (subprocess)          │
+       │   MetricFlow compiles SQL        │
+       │   Runs against DuckDB            │
+       └──────────────┬────────────────────┘
+                      ▼
+       metric_time__month  cet1_ratio  buffer_headroom
+       2025-09-01          14.39        4.64
+       2025-12-01          14.66        4.91
+       2026-03-01          14.83        5.08
+```
+
+**Key difference from Example 8 (Ontology):** The ontology says what CET1 Ratio *is*. The metric layer governs how it is *computed and consumed* — MetricFlow enforces the formula for every consumer, not the agent or analyst.
+
+---
+
 ## 📚 Glossary
 
 | Term | Definition |
@@ -498,6 +564,9 @@ Run `setup_mcp_bfsi.py` once against the REST server — the MCP server picks up
 | **SKOS** | Simple Knowledge Organisation System. W3C standard for human-readable concept labels, definitions, and broader/narrower relationships. |
 | **rdflib** | Python library for parsing and querying RDF/OWL/SKOS ontologies in Turtle (.ttl) and other RDF formats. |
 | **OBML** | Ontology-Based Markup Language. Annotates data columns with ontology concept URIs, bridging the database schema and the domain model. |
+| **Metric Layer** | A governed catalogue of named business metrics with defined formulas, owners, and thresholds — enforced for every consumer. Sits above the semantic layer. |
+| **MetricFlow** | Open-source metric framework (Apache 2.0) that powers the dbt Semantic Layer. Compiles metric queries into SQL. CLI: `mf query`. |
+| **dbt** | Data build tool. Transforms raw data into governed models and metrics. `dbt-duckdb` adapter enables fully local usage with DuckDB. |
 | **YAML** | Human-readable data format. Used for data contracts and configuration. |
 
 ---

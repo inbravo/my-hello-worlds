@@ -188,12 +188,18 @@ Then ask the same capital adequacy questions directly in Claude Code.
 
 ## CE Series
 
-| Example | Transport | Agent code |
-|---------|-----------|------------|
-| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | SLayer REST | Yes — Python |
-| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | SLayer REST — BFSI | Yes — Python |
-| [Example 6](../[ce]-[slayer]-[mcp]-[2026-05]/README.md) | SLayer MCP — Jaffle Shop | No — Claude Desktop |
-| **Example 7 (this)** | **SLayer MCP — BFSI** | **No — Claude Desktop** |
+| Example | Semantic component | What the agent understands |
+|---------|-------------------|-----------------------------|
+| [Example 1](../[ce]-[hello-world]-[2026-05]/README.md) | Hand-written YAML contract | Schema — column names and types |
+| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model — SLayer REST (generic) | Measures and dimensions |
+| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — SLayer REST (BFSI) | Business metric definitions |
+| [Example 4](../[ce]-[odcs]-[bfsi]-[2026-05]/README.md) | Formal ODCS contract (Bitol 0.9.3) | Ownership, quality, SLAs |
+| [Example 5](../[ce]-[odps]-[trade]-[2026-05]/README.md) | Data product (ODPS 2.0) | Ports, use cases, governance |
+| [Example 6](../[ce]-[slayer]-[mcp]-[2026-05]/README.md) | Semantic layer via MCP (generic) | Zero-code semantic queries |
+| **Example 7 (this)** | **Semantic layer via MCP (BFSI)** | **Capital adequacy via MCP — no Python** |
+| [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Concept hierarchy, Basel III articles |
+| [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Named governed metrics |
+| Example 10 | Full stack comparison | Coming |
 
 ---
 

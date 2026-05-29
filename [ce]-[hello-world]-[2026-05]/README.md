@@ -348,3 +348,20 @@ Based on the most recent data, our current CET1 ratio is 14.83%, while the combi
 requirement stands at 9.75%. Buffer headroom: 5.08 percentage points.
 ============================================================
 ```
+
+---
+
+## CE Series
+
+| Example | Semantic component | What the agent understands |
+|---------|-------------------|-----------------------------|
+| **[Example 1](../[ce]-[hello-world]-[2026-05]/README.md) (this)** | Hand-written YAML contract | Schema — column names and types |
+| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model — SLayer REST (generic) | Measures and dimensions |
+| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — SLayer REST (BFSI) | Business metric definitions |
+| [Example 4](../[ce]-[odcs]-[bfsi]-[2026-05]/README.md) | Formal ODCS contract (Bitol 0.9.3) | Ownership, quality, SLAs |
+| [Example 5](../[ce]-[odps]-[trade]-[2026-05]/README.md) | Data product (ODPS 2.0) | Ports, use cases, governance |
+| [Example 6](../[ce]-[slayer]-[mcp]-[2026-05]/README.md) | Semantic layer via MCP (generic) | Zero-code semantic queries |
+| [Example 7](../[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/README.md) | Semantic layer via MCP (BFSI) | Capital adequacy via MCP |
+| [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Concept hierarchy, Basel III articles |
+| [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Named governed metrics |
+| Example 10 | Full stack comparison | Coming |

@@ -176,15 +176,18 @@ the governance context. Demo 1 could not answer them.
 
 ## CE Series
 
-| Demo | Semantic component | New concept introduced |
-|------|--------------------|------------------------|
-| [Demo 1](../[ce]-[hello-world]-[2026-05]/README.md) | Hand-written YAML contract | Data contract as context |
-| [Demo 2](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model (SLayer) | Semantic layer as context |
-| **Demo 3 (this)** | **Formal ODCS contract (Bitol)** | **Governed, standard-compliant contract** |
-| Demo 4 | Data Product (DPDS) | Data product definition as context |
-| Demo 5 | Ontology (OWL/RDF + OBML) | Domain knowledge as context |
-| Demo 6 | Metric layer | Named business metrics as context |
-| Demo 7 | Full stack comparison | Measurable quality difference |
+| Example | Semantic component | What the agent understands |
+|---------|-------------------|-----------------------------|
+| [Example 1](../[ce]-[hello-world]-[2026-05]/README.md) | Hand-written YAML contract | Schema — column names and types |
+| [Example 2](../[ce]-[slayer]-[hello-world]-[2026-05]/README.md) | Semantic model — SLayer REST (generic) | Measures and dimensions |
+| [Example 3](../[ce]-[slayer]-[bfsi]-[2026-05]/README.md) | Semantic model — SLayer REST (BFSI) | Business metric definitions |
+| **Example 4 (this)** | **Formal ODCS contract (Bitol 0.9.3)** | **Ownership, quality, SLAs, freshness** |
+| [Example 5](../[ce]-[odps]-[trade]-[2026-05]/README.md) | Data product (ODPS 2.0) | Ports, use cases, governance |
+| [Example 6](../[ce]-[slayer]-[mcp]-[2026-05]/README.md) | Semantic layer via MCP (generic) | Zero-code semantic queries |
+| [Example 7](../[ce]-[slayer]-[mcp]-[bfsi]-[2026-05]/README.md) | Semantic layer via MCP (BFSI) | Capital adequacy via MCP |
+| [Example 8](../[ce]-[ontology]-[bfsi]-[2026-05]/README.md) | OWL/SKOS domain ontology | Concept hierarchy, Basel III articles |
+| [Example 9](../[ce]-[metrics]-[bfsi]-[2026-05]/README.md) | dbt Metric Layer (MetricFlow) | Named governed metrics |
+| Example 10 | Full stack comparison | Coming |
 
 ---
 
