@@ -196,137 +196,89 @@ demonstrable effect on answer quality.
 | Scoring | Keyword rubric — 5 criteria, 0/1 per agent |
 
 ```bash
-(.venv) inbravo@IMUL-ML0515 code % python run_comparison.py 
+(.venv) inbravo@IMUL-ML0515 code % python run_comparison.py
 
 ▶ Running Agent 1 — Baseline (schema only) ...
-  Score: 5/5
+  Score: 1/5
 
 ▶ Running Agent 2 — + YAML Data Contract ...
-  Score: 4/5
+  Score: 1/5
 
 ▶ Running Agent 3 — + ODCS Governance Contract ...
-  Score: 5/5
+  Score: 2/5
 
 ▶ Running Agent 4 — + OWL/SKOS Domain Ontology ...
-  Score: 5/5
-
-▶ Running Agent 5 — Full Stack (all layers) ...
   Score: 4/5
 
-══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+▶ Running Agent 5 — Full Stack (all layers) ...
+  Score: 5/5
+
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
   CONTEXT ENGINEERING — FULL STACK COMPARISON
-  Question: What is our current CET1 ratio, how does it compare to the Basel III minimum requirement, who o...
-══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  Q: What is our current CET1 ratio, how does it compare to the Basel III minimum requirement, ...
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Agent 1 — Baseline (schema only)
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Based on the latest data as of March 31, 2026:  - The current CET1 ratio for BANK_HOLDCO is 14.83%. -
-  This compares favorably to the Basel III minimum requirement of a CET1 ratio of at least 4.5%.  Regarding
-  who owns this data and when it was last certified: The specific data provided here does not explicitly
-  state the ownership or certification status, but given that "BANK_HOLDCO" is listed as the entity, we can
-  infer that the capital position data for BANK_HOLDCO has been reported up to March 31, 2026. Typically,
-  such data would be certified at specific reporting dates by regulatory bodies or internal audit teams
-  (this information isn't provided here).  Regarding buffer headroom: A combined buffer of 9.75% suggests
-  that the bank has a significant amount of capital above the minimum requirements to build a cushion for
-  potential future losses. If this buffer headroom were to turn negative, it would indicate that the CET1
-  ratio had dropped below the sum of the minimum capital requirement and any applicable buffers (such as a
-  Capital Conservation Buffer). This could be a cause for concern from a regulatory perspective and may
-  lead to restrictions on certain activities like dividend payments or share purchases.
+  ── Agent 1 — Baseline (schema only)  [1/5] ──
+     Our current CET1 ratio as of 2026-03-31 is 14.83%. This exceeds the Basel III minimum requirement of
+     4.5% for Common Equity Tier 1 (CET1) capital ratio.  The data is owned by BANK_HOLDCO and was last
+     certified on 2026-03-31.  If our buffer headroom turns negative, it means that the additional buffer
+     capital required under the countercyclical capital buffer or the planned systemic risk buffer would
+     not be met. This could indicate potential vulnerabilities in the bank's risk management framework
+     and may necessitate corrective actions to rebuild the buffer or address underlying risks as per
+     Basel
+     [... truncated]
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Agent 2 — + YAML Data Contract
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Based on the most recent data available as of March 31, 2026:  - The current CET1 ratio for BANK_HOLDCO
-  is 14.83%. - According to Basel III requirements, the minimum Common Equity Tier 1 (CET1) capital ratio
-  for systemically important banking organizations, such as global systemically important banks (G-SIBs),
-  is typically around 6%. For simpler banks, it can be lower, ranging from 4.5% to 6%, depending on their
-  internal ratings-based approach for regulatory capital measurement. - Therefore, the current CET1 ratio
-  of 14.83% exceeds both the minimum and often recommended leverage ratios required by Basel III.  The data
-  owner is treasury.risk@bank.com, and it is refreshed quarterly as per your system's lineage information.
-  The data was last refreshed in March 2026, corresponding to the most recent reporting date provided
-  (March 31, 2026).  Regarding buffer headroom turning negative, a negative buffer headroom indicates that
-  the combined regulatory buffers (including CCB, G-SII, and countercyclical) are less than or equal to the
-  CET1 capital available. This situation could trigger various actions including:  - Promptly addressing
-  potential risks identified within the bank’s risk profile. - Implementing additional compliance measures
-  as required by regulators. - Conducting thorough stress tests to determine the sustainability of
-  operations under adverse conditions.  Ultimately, maintaining adequate buffer headroom is crucial for
-  ensuring resilience and long-term stability. If the buffer headroom does turn negative, proactive
-  management and remedial actions would be necessary to return to a healthy position compliant with
-  regulatory standards.
+  ── Agent 2 — + YAML Data Contract  [1/5] ──
+     Our current CET1 ratio as of the latest reporting date is 14.83%. This exceeds the minimum Basel III
+     Common Equity Tier 1 (CET1) capital requirement of 4.5%, indicating a strong regulatory buffer
+     relative to requirements.  The entity "BANK_HOLDCO" owns this data. The table housing this
+     information, `capital_position`, is refreshed quarterly and sourced from the core banking system via
+     a bootstrapping script.  If our buffer headroom turns negative, it means that the combined buffer
+     requirement (CCB + G-SII + countercyclical) becomes larger than the CET1 capital held by the entity.
+     While there a
+     [... truncated]
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Agent 3 — + ODCS Governance Contract
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Based on the latest data as of `2026-03-31`, our current CET1 ratio is 14.83%. According to Basel III
-  requirements, the minimum Common Equity Tier 1 (CET1) ratio for a bank like ours in normal times without
-  capital conservation buffer requirements is at least 4.5%. However, once buffers are considered, the
-  requirement is typically higher with an overall common equity tier-1 capital adequacy ratio of at least
-  6%.  Our CET1 ratio is currently well above these minimums. Here's how it compares: - CET1 Ratio: 14.83%
-  - Minimum Basel III (Normal Times): ~4.5%  The difference between the CET1 ratio and combined buffer
-  requirement provides a buffer headroom amount which is important for stability.  Regarding ownership,
-  this data belongs to the `Treasury Risk Team` as stated in the ODCS contract.  In terms of certification,
-  there isn't an explicit provision related to quarterly certifications mentioned in the contract. However,
-  compliance with regulatory requirements and internal governance practices typically would mandate regular
-  audits or reviews at least annually; any deviation that could impact regulatory standing is likely
-  subject to immediate notice or audit as per the terms provided within the ODCS contract.  If our buffer
-  headroom turns negative (i.e., if `cet1_ratio_pct` drops below `combined_buffer`), this triggers
-  regulatory intervention. The contract mentions that a headroom (the difference between `cet1_ratio_pct`
-  and `combined_buffer`) below zero signals for regulatory action, which typically involves restrictions on
-  dividend payments, stock buybacks, or other activities until the buffer is restored.  Would you like me
-  to provide further analysis based on this information?
+  ── Agent 3 — + ODCS Governance Contract  [2/5] ──
+     Based on the most recent data available (as of March 31, 2026):  - Our current CET1 ratio is 14.83%.
+     The Basel III minimum requirement for the CET1 ratio is 4.5% under Pillar 1 of the Capital Adequacy
+     Regulation.  ### Ownership and Certification - **Owner**: Treasury Risk Team. - The document does
+     not provide specific details on when it was last certified, but according to the service level
+     agreements (SLAs) outlined in the governance contract:   - Support SLA states that the Treasury Risk
+     Team responds within one business day from receipt of request or issue.   - However, for more
+     precise ce
+     [... truncated]
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Agent 4 — + OWL/SKOS Domain Ontology
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Based on the data as of March 31, 2026:  - The current CET1 ratio is 14.83%. - This compares favorably to
-  the Basel III minimum requirement of 4.5%, as our ratio significantly exceeds it.  The data is owned by
-  the Treasury Risk Team at BANK_HOLDCO and can be found [here](https://internal.bank.com/data/capital-
-  risk). It was last certified with the latest snapshot available being for March 31, 2026, which means it
-  reflects recent regulatory standards and guidelines.  If our buffer headroom turns negative (i.e., CET1
-  ratio - combined buffer < 0), this would indicate that our CET1 capital has fallen below the required
-  levels despite holding all applicable buffers. This would trigger regulatory intervention to ensure
-  compliance with the minimum capital requirements, potentially leading to restrictions on dividends, share
-  buybacks, and bonus payments as part of the Capital Conservation Buffer (CCB) provisions.  In summary: -
-  Current CET1 ratio: 14.83% - Basel III minimum requirement: 4.5% (well above required) - Ownership:
-  Treasury Risk Team at BANK_HOLDCO - Last certification date: March 31, 2026 - Buffer headroom below zero
-  triggers regulatory intervention and potential restrictions on capital distributions.
+  ── Agent 4 — + OWL/SKOS Domain Ontology  [4/5] ──
+     Based on the data from the `capital_position` table as of 2026-03-31:  - The Current CET1 ratio is
+     **14.83%**. - This compared to the Basel III minimum requirement, which is **4.5%**, our bank’s
+     current CET1 ratio significantly exceeds the required threshold by a margin of **(14.83 - 4.5) =
+     10.33 percentage points**.  The data for BANK_HOLDCO was last certified on 2026-03-31, which aligns
+     with the internal regulatory schedule. The ownership of this data is under the Treasury Risk Team as
+     stated in the ODCS contract.  Regarding service levels and certifications, according to the provided
+     govern
+     [... truncated]
 
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Agent 5 — Full Stack (all layers)
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Based on the provided ODCS contract and domain ontology, I can answer your questions as follows:  1.
-  **Current CET1 Ratio:**    The current Common Equity Tier 1 (CET1) ratio for BANK_HOLDCO is available in
-  the `capital_position` table within the regulatory reporting data set. According to the information
-  provided, it should be assessed using metric names from dbt MetricFlow, such as `cet1_ratio`. However,
-  due to the errors encountered in querying the metrics with the entity dimension directly, we need to
-  fetch the most recent values for BANK_HOLDCO. For the latest quarter-end date, you can use:    ```sql
-  SELECT cet1_ratio_pct FROM capital_position WHERE entity = 'BANK_HOLDCO' AND reporting_date IN (SELECT
-  MAX(reporting_date) FROM capital_position WHERE entity = 'BANK_HOLDCO');    ```  2. **Comparison to Basel
-  III Minimum Requirement:**    The minimum CET1 ratio required under Basel III is 4.5% as per Article
-  92(1)(a). You can compare the current `cet1_ratio` obtained above with this minimum threshold.  3.
-  **Ownership and Certification of Data:**    - **Owner:** Treasury Risk Team    - **Contact Information:**
-  treasury.risk@bank.com, https://internal.bank.com/data/capital-risk  4. **Last Certification:**    The
-  contract specifies that the data is used for internal capital adequacy reporting and regulatory
-  submissions to the PRA (Prudential Regulation Authority). The governance details don’t specify a specific
-  certification date; however, the data should be regularly validated against regulatory requirements.  5.
-  **Actions if Buffer Headroom Turns Negative:**    If the buffer headroom turns negative, meaning
-  `buffer_headroom` is less than zero, it would indicate that the CET1 ratio is below the combined buffer
-  requirement. According to Basel III Article 141, financial institutions are restricted from distributing
-  dividends, repurchasing shares, or paying bonuses.  Given these points, I can help you fetch the latest
-  CET1 ratio for BANK_HOLDCO and compare it with the minimum threshold using the provided SQL query.
+  ── Agent 5 — Full Stack (all layers)  [5/5] ──
+     Based on the metric query result, the current CET1 ratio for each quarter-end date is as follows:  -
+     **2025-12-31**: 14.66% - **2025-09-30**: 14.39% - **2026-03-31**: 14.83%  The specific Basel III
+     article that governs the CET1 ratio minimum is [Basel III Article
+     92(1)(a)](https://www.bankingregulation.org/basel-iii/regulatory-capital/tier-1-capital/#cet1).
+     According to this article, the minimum required CET1 ratio is 4.5%.  The exact data owner name from
+     the ODCS contract is **Treasury Risk Team**.  The exact freshness SLA (freshness threshold) from the
+     ODCS contract specifies that the data m
+     [... truncated]
 
-══════════════════════════════════════════════════════════════════════════════════════════════════════════════
-  SCORING — Which parts of the question each layer answered
-══════════════════════════════════════════════════════════════════════════════════════════════════════════════
-  Criterion                        Agent 1                                 Agent 2                                 Agent 3                                 Agent 4                                 Agent 5                               
-  -------------------------------  --------------------------------------  --------------------------------------  --------------------------------------  --------------------------------------  --------------------------------------
-  CET1 ratio value (14.83%)        ✅                                       ✅                                       ✅                                       ✅                                       ❌                                     
-  Basel III minimum (4.5%)         ✅                                       ✅                                       ✅                                       ✅                                       ✅                                     
-  Data owner identified            ✅                                       ✅                                       ✅                                       ✅                                       ✅                                     
-  Certification / freshness        ✅                                       ✅                                       ✅                                       ✅                                       ✅                                     
-  Negative headroom consequence    ✅                                       ❌                                       ✅                                       ✅                                       ✅                                     
-  -------------------------------  --------------------------------------  --------------------------------------  --------------------------------------  --------------------------------------  --------------------------------------
-  TOTAL                            5/5                                     4/5                                     5/5                                     5/5                                     4/5                                   
-══════════════════════════════════════════════════════════════════════════════════════════════════════════════
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  SCORING — which parts each context layer answered
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+  Criterion                               Baseline (schema only)        + YAML Data Contract          + ODCS Governance Contract    + OWL/SKOS Domain Ontology    Full Stack (all layers)     
+  --------------------------------------  ----------------------------  ----------------------------  ----------------------------  ----------------------------  ----------------------------
+  CET1 ratio value (14.83%)               ✅                             ✅                             ✅                             ✅                             ✅                           
+  Regulation cited (Basel III Art. 92)    ❌                             ❌                             ❌                             ❌                             ✅                           
+  Owner: Treasury Risk Team               ❌                             ❌                             ✅                             ✅                             ✅                           
+  Freshness SLA (5 business days)         ❌                             ❌                             ❌                             ✅                             ✅                           
+  Negative headroom → Art. 141            ❌                             ❌                             ❌                             ✅                             ✅                           
+  --------------------------------------  ----------------------------  ----------------------------  ----------------------------  ----------------------------  ----------------------------
+  TOTAL                                   1/5                           1/5                           2/5                           4/5                           5/5                         
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 ```
