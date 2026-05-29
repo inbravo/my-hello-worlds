@@ -33,7 +33,7 @@ import duckdb
 import structlog
 from openai import OpenAI
 from rdflib import Graph, Namespace, RDF, RDFS, OWL
-from rdflib.namespace import SKOS, XSD
+from rdflib.namespace import SKOS
 
 log = structlog.get_logger()
 

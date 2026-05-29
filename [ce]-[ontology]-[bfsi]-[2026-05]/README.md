@@ -219,3 +219,21 @@ How has our CET1 capital grown since September 2025, and what does Basel III say
 | LLM (cloud) | Anthropic Claude |
 | Data | DuckDB (`capital_bfsi.duckdb`) |
 | Domain | BFSI — Basel III/IV Capital Adequacy |
+
+## Sample Output (qwen2.5 via Ollama)
+
+```bash
+(.venv) inbravo@IMUL-ML0515 code % python3 agent_ontology_ollama.py 
+2026-05-29 18:13:58 [info     ] ontology.load                  path=/Users/inbravo/GitHub/my-hello-worlds/[ce]-[ontology]-[bfsi]-[2026-05]/code/../ontology/bfsi_capital.ttl
+2026-05-29 18:13:58 [info     ] ontology.question              q='What is our current CET1 ratio and how much headroom do we have above the Basel III combined buffer requirement?'
+2026-05-29 18:14:21 [info     ] ontology.sql                   sql="SELECT cet1_ratio_pct, combined_buffer FROM capital_position WHERE reporting_date = '2026-03-31' LIMIT 1;"
+2026-05-29 18:14:21 [info     ] ontology.result                rows='cet1_ratio_pct | combined_buffer\n--------------------------------\n14.8300 | 9.7500'
+
+============================================================
+As of the most recent reporting date on 2026-03-31, the bank's CET1 ratio is 14.83%. This can be calculated as Common Equity Tier 1 Capital (expressed in millions) divided by Risk-Weighted Assets (also in millions), multiplied by 100. 
+
+The bank currently has a combined buffer requirement of 9.75% per the Basel III framework. The combined buffer consists of a fixed 2.5% Capital Conservation Buffer plus any applicable countercyclical or systemic risk buffers, in this case amounting to another 7.25%. According to Basel III (Article 128-131), banks must maintain at least this 9.75% buffer above the minimum Common Equity Tier 1 Capital requirement.
+
+Comparing these values, we find a positive headroom of 14.83% minus 9.75%, which equals 5.08 percentage points. This indicates that the bank is well-capitalized and has excess Common Equity Tier 1 capital above its regulatory requirements. Specifically, the bank can absorb an additional 5.08% in unexpected losses without breaching the minimum standards set by Basel III (Article 26-50 for the CET1 ratio).
+============================================================
+```
