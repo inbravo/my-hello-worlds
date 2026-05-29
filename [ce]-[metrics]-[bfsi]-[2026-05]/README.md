@@ -200,3 +200,31 @@ is enforced by MetricFlow, not left to the agent or analyst to implement.
 | LLM (local) | Ollama qwen2.5 |
 | Data | DuckDB (`capital_bfsi.duckdb` via dbt model) |
 | Domain | BFSI — Basel III/IV Capital Adequacy |
+
+## Sample Output (qwen2.5 via Ollama)
+
+```bash
+(.venv) inbravo@IMUL-ML0515 code % python3 agent_metrics_ollama.py
+2026-05-29 23:06:17 [info     ] metrics.question               q='What is our current CET1 ratio and buffer headroom, and how have they trended over the last three quarters?'
+2026-05-29 23:06:27 [info     ] metrics.tool_call              group_by=['metric_time__month'] metrics=['cet1_ratio', 'buffer_headroom']
+2026-05-29 23:06:27 [info     ] metrics.mf_query               cmd='mf query --metrics cet1_ratio,buffer_headroom --group-by metric_time__month --limit 3'
+2026-05-29 23:06:29 [info     ] metrics.result                 preview='metric_time__month      cet1_ratio    buffer_headroom\n--------------------  ------------  -----------------\n2025-12-01T00:00:00          14.66               4.91\n2026-03-01T00:00:00          14.83               5.08\n2025-09-01T00:00:00          14.39               4.64'
+
+============================================================
+Based on the provided data, over the last three quarterly end months:
+
+1. The CET1 ratio stood at 14.66% in December 2025.
+2. This improved to 14.83% by March 2026.
+3. By September 2025, it was slightly lower at 14.39%.
+
+The combined buffer requirement is set at 7.5% (CET1 Buffer of 2.5% + Capital Conservation Buffer of 2.5% + Countercyclical and Systemic Risk Buffers when in effect).
+
+Converting these percentages to the required metric units:
+
+- For December 2025: The CET1 ratio is 466 basis points above the minimum requirement, providing ample headroom.
+- In March 2026: The buffer headroom increased by about 3% compared to the previous quarter, further strengthening our capital adequacy position at 508 basis points over the threshold.
+- September 2025 saw a margin of 4.64 percentage points above the combined buffer requirement.
+
+These trends indicate that your bank has consistently maintained a strong capital base significantly well over regulatory requirements, ensuring compliance and resilience as per Basel III guidelines. The positive buffer headroom means there are no immediate triggers for distribution restrictions according to Article 141. Ownership of these metrics is under Treasury Risk and the metric layers ensure they follow appropriate governance practices.
+============================================================
+```
