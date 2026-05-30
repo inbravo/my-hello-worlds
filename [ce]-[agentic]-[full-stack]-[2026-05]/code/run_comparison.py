@@ -234,10 +234,9 @@ def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI
         tools=[tool], tool_choice="none"
     )
     answer = r2.choices[0].message.content or "(no answer)"
-    log.info("agent.turn2.answer",
+    log.info("agent.response",
              agent=agent_name,
-             answer_chars=len(answer),
-             answer_preview=answer[:120] + "..." if len(answer) > 120 else answer)
+             answer=answer[:200] + "..." if len(answer) > 200 else answer)
     return answer
 
 # ─────────────────────────────────────────────────────────────────
@@ -446,9 +445,8 @@ def agent_full_stack(client: OpenAI) -> str:
         tools=[tool], tool_choice="none"
     )
     answer = r2.choices[0].message.content or "(no answer)"
-    log.info("agent.turn2.answer", agent="Full Stack",
-             answer_chars=len(answer),
-             answer_preview=answer[:120] + "..." if len(answer) > 120 else answer)
+    log.info("agent.response", agent="Full Stack",
+             answer=answer[:200] + "..." if len(answer) > 200 else answer)
     return answer
 
 # ── Scoring ───────────────────────────────────────────────────────
@@ -537,16 +535,47 @@ def main() -> None:
         ("Agent 5 — Full Stack (all layers)",          agent_full_stack),
     ]
 
-    results = []
+    results     = []
+    prev_scores = None
+
     for name, fn in agents:
         print(f"\n▶ Running {name} ...")
         try:
-            answer = fn(client)
-            scores = score(answer)
-            total  = sum(scores.values())
+            answer  = fn(client)
+            scores  = score(answer)
+            total   = sum(scores.values())
+
+            passed  = [c for c, v in scores.items() if v]
+            failed  = [c for c, v in scores.items() if not v]
+            unlocked = (
+                [c for c in passed if not prev_scores or not prev_scores[c]]
+                if prev_scores else passed
+            )
+            still_missing = failed
+
+            # ── Maturation narrative log ──────────────────────────────
+            log.info("context.maturation",
+                     agent=name,
+                     score=f"{total}/{len(RUBRIC)}",
+                     newly_unlocked=unlocked   if unlocked       else ["(none)"],
+                     still_missing =still_missing if still_missing else ["(none — all answered)"])
+
+            if unlocked:
+                log.info("context.improvement",
+                         agent=name,
+                         added_context_unlocked=unlocked,
+                         message=f"Adding this layer answered {len(unlocked)} new criterion/criteria")
+            else:
+                log.info("context.no_improvement",
+                         agent=name,
+                         message="This context layer did not unlock any new answer criteria")
+
+            prev_scores = scores
             print(f"  Score: {total}/{len(RUBRIC)}")
             results.append((name, answer, scores))
+
         except Exception as e:
+            log.error("agent.error", agent=name, error=str(e))
             print(f"  ERROR: {e}")
             results.append((name, f"ERROR: {e}", {k: False for k in RUBRIC}))
 
