@@ -40,6 +40,80 @@ from openai import OpenAI
 from rdflib import Graph, Namespace, RDF, RDFS, OWL
 from rdflib.namespace import SKOS
 
+# ── ANSI colour palette (no extra deps) ──────────────────────────
+class C:
+    RESET          = "\033[0m"
+    BOLD           = "\033[1m"
+    DIM            = "\033[2m"
+    RED            = "\033[31m"
+    GREEN          = "\033[32m"
+    YELLOW         = "\033[33m"
+    BLUE           = "\033[34m"
+    MAGENTA        = "\033[35m"
+    CYAN           = "\033[36m"
+    WHITE          = "\033[37m"
+    BRIGHT_RED     = "\033[91m"
+    BRIGHT_GREEN   = "\033[92m"
+    BRIGHT_YELLOW  = "\033[93m"
+    BRIGHT_BLUE    = "\033[94m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_CYAN    = "\033[96m"
+    BRIGHT_WHITE   = "\033[97m"
+
+# Colour by event name
+_EVENT_COLOUR = {
+    "agent.start":              C.BOLD + C.BRIGHT_CYAN,
+    "agent.context_loaded":     C.DIM  + C.CYAN,
+    "agent.turn1.request":      C.YELLOW,
+    "agent.turn1.tool_call":    C.BOLD + C.BLUE,
+    "agent.turn1.direct_answer":C.DIM  + C.WHITE,
+    "agent.turn2.request":      C.DIM  + C.YELLOW,
+    "agent.response":           C.BRIGHT_WHITE,
+    "tool.sql":                 C.MAGENTA,
+    "tool.sql.result":          C.GREEN,
+    "tool.sql.error":           C.BOLD + C.RED,
+    "tool.mf_query":            C.MAGENTA,
+    "tool.mf_query.result":     C.GREEN,
+    "tool.mf_query.error":      C.BOLD + C.RED,
+    "context.maturation":       C.BOLD + C.BRIGHT_WHITE,
+    "context.improvement":      C.BOLD + C.BRIGHT_GREEN,
+    "context.no_improvement":   C.BOLD + C.BRIGHT_YELLOW,
+    "agent.error":              C.BOLD + C.BRIGHT_RED,
+}
+
+def _colour_processor(logger, method, event_dict):
+    """Colour the event name and key fields based on semantic meaning."""
+    event  = event_dict.get("event", "")
+    colour = _EVENT_COLOUR.get(event, C.DIM)
+
+    # Colour the event key itself
+    event_dict["event"] = f"{colour}{event}{C.RESET}"
+
+    # Colour score by value (red → yellow → green)
+    if "score" in event_dict:
+        s = str(event_dict["score"])
+        try:
+            n, d  = (int(x) for x in s.split("/"))
+            sc    = C.BRIGHT_GREEN if n == d else (C.YELLOW if n >= d * 0.6 else C.RED)
+            event_dict["score"] = f"{sc}{s}{C.RESET}"
+        except Exception:
+            pass
+
+    # (field-level colouring skipped — structlog repr-quotes strings with ANSI in them)
+
+    return event_dict
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        structlog.dev.set_exc_info,
+        _colour_processor,
+        structlog.dev.ConsoleRenderer(colors=False),   # colour handled above
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(0),
+    logger_factory=structlog.PrintLoggerFactory(),
+)
+
 log = structlog.get_logger()
 
 # ── Config ────────────────────────────────────────────────────────
