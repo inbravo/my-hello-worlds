@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "agentic-stack",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "7823", "--directory", "/tmp/agentic_stack"],
+      "port": 7823
+    }
+  ]
+}
