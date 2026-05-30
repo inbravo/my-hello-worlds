@@ -584,6 +584,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 # Author   : Amit Dixit
 # GitHub   : https://github.com/inbravo
 # Web      : https://inbravo.github.io
-# LinkedIn : https://www.linkedin.com/in/amitnoida/
+# LinkedIn : https://www.linkedin.com/in/inbravo/
 # ─────────────────────────────────────────────────────
 ```
