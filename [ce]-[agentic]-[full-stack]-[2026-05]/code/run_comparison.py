@@ -138,6 +138,42 @@ DBT_PROJECT   = os.path.join(
 
 BFSI = Namespace("https://github.com/inbravo/ce-series/ontology/bfsi#")
 
+# ── Input layer definitions (used in final comparison table) ──────
+# (display_name, path_relative_to_repo_root, [agent1..5 boolean flags])
+INPUT_LAYERS = [
+    (
+        "DB Schema",
+        "[ce]-[agentic]-[full-stack]-[2026-05]/code/capital_bfsi.duckdb",
+        [True, True, True, True, True],
+    ),
+    (
+        "YAML Data Contract",
+        "[ce]-[hello-world]-[2026-05]/code/contracts/capital_risk.yaml",
+        [False, True, True, True, True],
+    ),
+    (
+        "ODCS Governance Contract",
+        "[ce]-[odcs]-[bfsi]-[2026-05]/code/contracts/capital_risk_odcs.yaml",
+        [False, False, True, True, True],
+    ),
+    (
+        "OWL/SKOS Ontology",
+        "[ce]-[ontology]-[bfsi]-[2026-05]/ontology/bfsi_capital.ttl",
+        [False, False, False, True, True],
+    ),
+    (
+        "dbt Metric Layer",
+        "[ce]-[metrics]-[bfsi]-[2026-05]/dbt_project/models/schema.yml",
+        [False, False, False, False, True],
+    ),
+]
+
+# Short column labels for the table header (one per agent, in order)
+SHORT_LABELS = ["Baseline", "+YAML", "+ODCS", "+Ontology", "Full Stack"]
+
+# Populated by each agent function before it calls the LLM
+_agent_system_chars: dict[str, int] = {}
+
 # ── The test question ─────────────────────────────────────────────
 QUESTION = (
     "What is our current CET1 ratio, how does it compare to the Basel III "
@@ -328,6 +364,7 @@ def agent_baseline(client: OpenAI) -> str:
         "cet1_ratio_pct, combined_buffer\n"
         "Latest date: 2026-03-31"
     )
+    _agent_system_chars["Agent 1 — Baseline (schema only)"] = len(system)
     tool = make_sql_tool("Query the capital_position table in DuckDB.")
     return call_agent("Baseline", system, tool, lambda p: run_sql(p["sql"]), client)
 
@@ -347,6 +384,7 @@ def agent_yaml(client: OpenAI) -> str:
         "SLAs, or regulatory consequences beyond what is explicitly in the contract.\n\n"
         f"DATA CONTRACT:\n{ctx}"
     )
+    _agent_system_chars["Agent 2 — + YAML Data Contract"] = len(system)
     tool = make_sql_tool(
         "Query the capital_position table. "
         "The data contract in your system prompt describes the columns."
@@ -368,6 +406,7 @@ def agent_odcs(client: OpenAI) -> str:
         "Use the SQL tool for data. Answer governance questions from the contract.\n\n"
         f"ODCS CONTRACT:\n{ctx}"
     )
+    _agent_system_chars["Agent 3 — + ODCS Governance Contract"] = len(system)
     tool = make_sql_tool(
         "Query the capital_position table. "
         "Use the ODCS contract in your system prompt for governance context."
@@ -416,6 +455,7 @@ def agent_ontology(client: OpenAI) -> str:
         f"ODCS CONTRACT:\n{odcs_ctx}\n\n"
         f"OWL/SKOS ONTOLOGY:\n{onto_ctx}"
     )
+    _agent_system_chars["Agent 4 — + OWL/SKOS Domain Ontology"] = len(system)
     tool = make_sql_tool(
         "Query the capital_position table.\n"
         "Use the ODCS contract for governance context and the ontology for domain knowledge.\n"
@@ -467,6 +507,7 @@ def agent_full_stack(client: OpenAI) -> str:
         "Use the query_metric tool to retrieve metric values. "
         "Answer governance and domain questions directly from the context above."
     )
+    _agent_system_chars["Agent 5 — Full Stack (all layers)"] = len(system)
     tool = make_mf_tool(
         "Query governed business metrics via MetricFlow. "
         "Do NOT write SQL — use metric names instead.\n\n"
@@ -527,58 +568,112 @@ def agent_full_stack(client: OpenAI) -> str:
 def score(answer: str) -> dict:
     return {k: fn(answer) for k, fn in RUBRIC.items()}
 
+def _fmt_size(chars: int) -> str:
+    """Format a character count as a human-readable size string."""
+    if chars == 0:
+        return "—"
+    if chars < 1000:
+        return f"{chars}ch"
+    return f"{chars / 1000:.1f}k"
+
+
 def print_results(results: list[tuple[str, str, dict]]) -> None:
     criteria = list(RUBRIC.keys())
-    crit_w   = max(len(c) for c in criteria) + 2
-    # Agent column headers — short labels only
-    labels = [n.split("—")[1].strip() if "—" in n else n for n in
-              [r[0] for r in results]]
-    col_w  = max(max(len(l) for l in labels) + 2, 10)
+    n        = len(results)
 
-    sep = "═" * (crit_w + (col_w + 2) * len(results) + 4)
+    # Left column wide enough for all layer names, criteria, and the size row label
+    left_w = max(
+        max(len(layer) for layer, _, _ in INPUT_LAYERS),
+        max(len(c)     for c in criteria),
+        len("System prompt size"),
+    ) + 2
+    col_w = 12      # fixed — accommodates "Full Stack" + 2-cell emoji padding
 
-    print("\n" + sep)
-    print("  CONTEXT ENGINEERING — FULL STACK COMPARISON")
+    def _pad(text: str, w: int) -> str:
+        """Right-pad a plain-text string (no ANSI) to exactly w chars."""
+        return text + " " * max(0, w - len(text))
+
+    def _cell(sym: str, colour: str) -> str:
+        """Colour a 2-cell emoji symbol and pad to col_w."""
+        return colour + sym + C.RESET + " " * (col_w - 2)
+
+    total_w = 2 + left_w + (2 + col_w) * n + 2
+    SEP  = "═" * total_w
+    THIN = "─" * total_w
+
+    # ── Per-agent answer snippets ──────────────────────────────────
+    print("\n" + SEP)
+    print(f"  {C.BOLD}CONTEXT ENGINEERING — INPUT → OUTPUT COMPARISON{C.RESET}")
     print(f"  Q: {QUESTION[:90]}...")
-    print(sep)
+    print(SEP)
 
-    # Print each agent's answer (abbreviated)
     for name, answer, scores in results:
-        total = sum(scores.values())
-        print(f"\n  ── {name}  [{total}/{len(RUBRIC)}] ──")
-        for line in textwrap.wrap(answer[:600], width=100):
-            print(f"     {line}")
-        if len(answer) > 600:
-            print("     [... truncated]")
+        total     = sum(scores.values())
+        sc_colour = (C.BRIGHT_GREEN if total == len(RUBRIC)
+                     else C.YELLOW  if total >= 3
+                     else C.RED)
+        print(f"\n  {C.BOLD}{name}{C.RESET}  "
+              f"[{sc_colour}{total}/{len(RUBRIC)}{C.RESET}]")
+        for line in textwrap.wrap(answer[:400], width=100):
+            print(f"     {C.DIM}{line}{C.RESET}")
+        if len(answer) > 400:
+            print(f"     {C.DIM}[... truncated]{C.RESET}")
 
-    # Scoring table
-    print("\n" + sep)
-    print("  SCORING — which parts each context layer answered")
-    print(sep)
+    # ── Combined input / output table ─────────────────────────────
+    print("\n" + SEP)
 
-    # Header row
-    hdr = f"  {'Criterion':<{crit_w}}"
-    for label in labels:
-        hdr += f"  {label:<{col_w}}"
+    # Header: short agent labels
+    hdr = "  " + _pad("", left_w)
+    for label in SHORT_LABELS[:n]:
+        hdr += "  " + _pad(label, col_w)
     print(hdr)
-    print(f"  {'-'*crit_w}" + (f"  {'-'*col_w}" * len(results)))
+    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
 
-    # Criteria rows
+    # ── INPUT section ──────────────────────────────────────────────
+    print(f"\n  {C.BOLD}{C.BRIGHT_CYAN}── INPUT CONTEXT LAYERS ──{C.RESET}")
+
+    for layer_name, layer_path, flags in INPUT_LAYERS:
+        row = "  " + _pad(layer_name, left_w)
+        for j in range(n):
+            flag = flags[j] if j < len(flags) else False
+            row += "  " + _cell("✅" if flag else "❌",
+                                 C.CYAN if flag else C.DIM)
+        print(row)
+        # Source file path — dimmed, indented with tree glyph
+        print(f"    {C.DIM}└─ {layer_path}{C.RESET}")
+
+    # System prompt size row (quantifies cost of richer context)
+    row = "  " + _pad("System prompt size", left_w)
+    for name, _, _ in results:
+        sz  = _fmt_size(_agent_system_chars.get(name, 0))
+        row += "  " + C.DIM + sz + C.RESET + " " * max(0, col_w - len(sz))
+    print(row)
+
+    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
+
+    # ── OUTPUT section ─────────────────────────────────────────────
+    print(f"\n  {C.BOLD}{C.BRIGHT_GREEN}── OUTPUT — CRITERIA SCORED ──{C.RESET}")
+
     for criterion in criteria:
-        row = f"  {criterion:<{crit_w}}"
+        row = "  " + _pad(criterion, left_w)
         for _, _, scores in results:
-            mark = "✅" if scores[criterion] else "❌"
-            row += f"  {mark:<{col_w}}"
+            flag = scores[criterion]
+            row += "  " + _cell("✅" if flag else "❌",
+                                 C.BRIGHT_GREEN if flag else C.RED)
         print(row)
 
-    # Total row
-    print(f"  {'-'*crit_w}" + (f"  {'-'*col_w}" * len(results)))
-    tot_row = f"  {'TOTAL':<{crit_w}}"
+    # Total score row
+    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
+    row = "  " + _pad("TOTAL SCORE", left_w)
     for _, _, scores in results:
-        total = sum(scores.values())
-        tot_row += f"  {total}/{len(RUBRIC):<{col_w-2}}"
-    print(tot_row)
-    print(sep)
+        total     = sum(scores.values())
+        sc_colour = (C.BRIGHT_GREEN if total == len(RUBRIC)
+                     else C.YELLOW  if total >= 3
+                     else C.RED)
+        tot_str   = f"{total}/{len(RUBRIC)}"
+        row += "  " + sc_colour + tot_str + C.RESET + " " * max(0, col_w - len(tot_str))
+    print(row)
+    print(SEP + "\n")
 
 # ── Main ──────────────────────────────────────────────────────────
 def main() -> None:
