@@ -291,8 +291,26 @@ def run_mf(metrics: list, group_by: list | None = None) -> str:
         return f"mf query ERROR: {e}"
 
 # ── Two-turn agent call ───────────────────────────────────────────
-def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI) -> str:
-    """Run two-turn agent: Turn 1 = tool call, Turn 2 = answer."""
+_DEFAULT_TURN2 = (
+    "Answer the question fully. Include the exact numeric values from the "
+    "tool result. Use the context in your system prompt for regulatory details, "
+    "ownership, SLA, and consequences. Do not call any tools."
+)
+
+def call_agent(
+    agent_name: str,
+    system: str,
+    tool: dict,
+    tool_fn,
+    client: OpenAI,
+    turn2_prompt: str = _DEFAULT_TURN2,
+) -> str:
+    """Run two-turn agent: Turn 1 = tool call, Turn 2 = answer.
+
+    ``turn2_prompt`` lets each agent demand exactly the values its context
+    can provide, preventing qwen2.5 from giving terse answers that drop
+    specific numbers or contract strings.
+    """
     tool_name = tool["function"]["name"]
     log.info("agent.turn1.request",
              agent=agent_name,
@@ -334,10 +352,7 @@ def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI
     messages += [
         {"role": "assistant", "content": None, "tool_calls": [tc]},
         {"role": "tool",      "content": result, "tool_call_id": tc.id},
-        {"role": "user",      "content":
-         "Answer the question fully. Include the exact numeric values from the "
-         "tool result. Use the context in your system prompt for regulatory details, "
-         "ownership, SLA, and consequences. Do not call any tools."}
+        {"role": "user",      "content": turn2_prompt},
     ]
     r2 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
@@ -411,7 +426,8 @@ def agent_odcs(client: OpenAI) -> str:
         "Query the capital_position table. "
         "Use the ODCS contract in your system prompt for governance context."
     )
-    return call_agent("+ ODCS Contract", system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("+ ODCS Contract", system, tool, lambda p: run_sql(p["sql"]), client,
+                      turn2_prompt=ODCS_TURN2)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 4 — + OWL/SKOS Ontology
@@ -462,14 +478,43 @@ def agent_ontology(client: OpenAI) -> str:
         "Table: capital_position | Latest date: 2026-03-31\n"
         "Columns: reporting_date, entity, cet1_capital_mm, rwa_mm, cet1_ratio_pct, combined_buffer"
     )
-    return call_agent("+ OWL/SKOS Ontology", system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("+ OWL/SKOS Ontology", system, tool, lambda p: run_sql(p["sql"]), client,
+                      turn2_prompt=ONTOLOGY_TURN2)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 5 — Full Stack (ODCS + Ontology + Metric Layer)
 # ─────────────────────────────────────────────────────────────────
+# Agent-specific Turn 2 prompts — each asks for exactly what that
+# agent's context layer can answer. Being explicit prevents qwen2.5
+# from giving terse answers that omit specific values.
+
+ODCS_TURN2 = (
+    "Answer the question. You must include ALL of the following:\n"
+    "1. The exact CET1 ratio percentage from the SQL query result "
+    "(write the number exactly as it appears, e.g. 14.83%)\n"
+    "2. The exact data owner name from the ODCS contract\n"
+    "3. The exact freshness SLA from the ODCS contract "
+    "(state the number of business days explicitly)\n"
+    "Do not add regulatory knowledge not present in the contract. "
+    "Do not call any tools."
+)
+
+ONTOLOGY_TURN2 = (
+    "Answer the question. You must include ALL of the following:\n"
+    "1. The exact CET1 ratio percentage from the SQL query result "
+    "(write the number exactly as it appears)\n"
+    "2. The specific Basel III article number that sets the CET1 minimum "
+    "(it is in the ontology — cite it exactly)\n"
+    "3. The exact data owner name from the ODCS contract\n"
+    "4. The exact freshness SLA from the ODCS contract "
+    "(state the number of business days explicitly)\n"
+    "Do not call any tools."
+)
+
 FULL_STACK_TURN2 = (
-    "Answer the question completely. You must include:\n"
-    "1. The exact CET1 ratio value from the metric query result\n"
+    "Answer the question completely. You must include ALL of the following:\n"
+    "1. The exact CET1 ratio value from the metric query result "
+    "(write the number exactly as it appears, e.g. 14.83%)\n"
     "2. The specific Basel III article that governs the CET1 ratio minimum\n"
     "3. The exact data owner name from the ODCS contract\n"
     "4. The exact freshness SLA (how many business days) from the ODCS contract\n"
