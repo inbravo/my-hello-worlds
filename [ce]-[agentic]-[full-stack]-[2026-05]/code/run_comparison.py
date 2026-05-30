@@ -307,7 +307,7 @@ def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI
     ]
     r1 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
-        tools=[tool], tool_choice="auto"
+        tools=[tool], tool_choice="auto", temperature=0
     )
     msg = r1.choices[0].message
 
@@ -341,7 +341,7 @@ def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI
     ]
     r2 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
-        tools=[tool], tool_choice="none"
+        tools=[tool], tool_choice="none", temperature=0
     )
     answer = r2.choices[0].message.content or "(no answer)"
     log.info("agent.response",
@@ -532,7 +532,7 @@ def agent_full_stack(client: OpenAI) -> str:
     ]
     r1 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
-        tools=[tool], tool_choice="auto"
+        tools=[tool], tool_choice="auto", temperature=0
     )
     msg = r1.choices[0].message
     if not msg.tool_calls:
@@ -557,7 +557,7 @@ def agent_full_stack(client: OpenAI) -> str:
     ]
     r2 = client.chat.completions.create(
         model=OLLAMA_MODEL, messages=messages,
-        tools=[tool], tool_choice="none"
+        tools=[tool], tool_choice="none", temperature=0
     )
     answer = r2.choices[0].message.content or "(no answer)"
     log.info("agent.response", agent="Full Stack",
@@ -627,7 +627,7 @@ def print_results(results: list[tuple[str, str, dict]]) -> None:
     for label in SHORT_LABELS[:n]:
         hdr += "  " + _pad(label, col_w)
     print(hdr)
-    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
+    print(THIN)
 
     # ── INPUT section ──────────────────────────────────────────────
     print(f"\n  {C.BOLD}{C.BRIGHT_CYAN}── INPUT CONTEXT LAYERS ──{C.RESET}")
@@ -649,7 +649,7 @@ def print_results(results: list[tuple[str, str, dict]]) -> None:
         row += "  " + C.DIM + sz + C.RESET + " " * max(0, col_w - len(sz))
     print(row)
 
-    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
+    print(THIN)
 
     # ── OUTPUT section ─────────────────────────────────────────────
     print(f"\n  {C.BOLD}{C.BRIGHT_GREEN}── OUTPUT — CRITERIA SCORED ──{C.RESET}")
@@ -663,7 +663,7 @@ def print_results(results: list[tuple[str, str, dict]]) -> None:
         print(row)
 
     # Total score row
-    print("  " + THIN[: left_w] + ("  " + "─" * col_w) * n)
+    print(THIN)
     row = "  " + _pad("TOTAL SCORE", left_w)
     for _, _, scores in results:
         total     = sum(scores.values())
