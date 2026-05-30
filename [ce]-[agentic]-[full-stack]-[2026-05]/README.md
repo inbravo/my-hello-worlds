@@ -100,6 +100,43 @@ python3 run_comparison.py
 
 ---
 
+## Debugging Ollama
+
+Enable verbose Ollama logging before running the comparison to see every
+request and response the local model processes:
+
+```bash
+# Enable debug logging (persists until next reboot or until you unset it)
+launchctl setenv OLLAMA_DEBUG 2
+
+# Restart Ollama so it picks up the new env var
+pkill ollama && ollama serve &
+
+# In a second terminal — follow the log while run_comparison.py runs
+tail -f ~/.ollama/logs/server.log
+```
+
+What you will see in the log for each of the 5 agents:
+
+| Log entry | What it shows |
+|---|---|
+| `POST /v1/chat/completions` | Turn 1 request — tool call decision |
+| `"tool_calls"` in response | Which tool and arguments qwen2.5 chose |
+| Second `POST /v1/chat/completions` | Turn 2 request — final answer with tool result |
+| Token counts (`prompt_eval_count`) | How many tokens each context layer consumed |
+
+Token count growth across agents directly reflects the cost of richer context:
+Agent 1 ≈ 400 tokens → Agent 5 ≈ 8 000+ tokens.
+
+To disable debug logging:
+
+```bash
+launchctl unsetenv OLLAMA_DEBUG
+pkill ollama && ollama serve &
+```
+
+---
+
 ## Expected Output
 
 ```
