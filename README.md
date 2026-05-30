@@ -542,6 +542,43 @@ mf query --metrics cet1_ratio,buffer_headroom --group-by metric_time__month
 
 ---
 
+## 🔍 Debugging Ollama
+
+All Ollama-backed examples (Examples 1–5, 8–10) send requests to the local `qwen2.5` model. Enable debug logging to see every request, response, and token count in real time:
+
+```bash
+# 1 — Enable verbose logging (persists until reboot or explicit unset)
+launchctl setenv OLLAMA_DEBUG 2
+
+# 2 — Restart Ollama to pick up the env var
+pkill ollama && ollama serve &
+
+# 3 — Follow the log while any example runs
+tail -f ~/.ollama/logs/server.log
+```
+
+What to look for in the log:
+
+| Entry | Meaning |
+|---|---|
+| `POST /v1/chat/completions` | Each LLM turn — Turn 1 (tool decision) and Turn 2 (final answer) |
+| `"tool_calls"` in response | Which tool and arguments the model chose |
+| `prompt_eval_count` | Tokens consumed by the system prompt — grows with each CE layer added |
+| `eval_count` | Tokens in the model's response |
+
+**Token growth is the cost of richer context.** In Example 10, `prompt_eval_count` rises from ~400 (Agent 1, schema only) to 8 000+ (Agent 5, all layers). The debug log makes this visible per request.
+
+To disable:
+
+```bash
+launchctl unsetenv OLLAMA_DEBUG
+pkill ollama && ollama serve &
+```
+
+> See [Example 10 README](./[ce]-[agentic]-[full-stack]-[2026-05]/README.md#debugging-ollama) for a per-agent breakdown of what each log entry shows.
+
+---
+
 ## 📚 Glossary
 
 | Term | Definition |
