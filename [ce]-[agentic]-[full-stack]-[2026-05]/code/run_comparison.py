@@ -145,17 +145,22 @@ def make_mf_tool(description: str) -> dict:
 # ── Execute SQL ───────────────────────────────────────────────────
 def run_sql(sql: str) -> str:
     os.chdir(SCRIPT_DIR)
+    log.info("tool.sql", query=sql)
     try:
         con  = duckdb.connect(DB_FILE)
         rows = con.execute(sql).fetchall()
         cols = [d[0] for d in con.description]
         con.close()
         if not rows:
+            log.info("tool.sql.result", rows=0)
             return "No rows returned."
         header = " | ".join(cols)
         body   = "\n".join(" | ".join(str(v) for v in row) for row in rows)
-        return f"{header}\n{'-'*len(header)}\n{body}"
+        result = f"{header}\n{'-'*len(header)}\n{body}"
+        log.info("tool.sql.result", rows=len(rows), columns=cols)
+        return result
     except Exception as e:
+        log.error("tool.sql.error", error=str(e))
         return f"SQL ERROR: {e}"
 
 # ── Execute mf query ──────────────────────────────────────────────
@@ -163,17 +168,29 @@ def run_mf(metrics: list, group_by: list | None = None) -> str:
     cmd = ["mf", "query", "--metrics", ",".join(metrics)]
     if group_by:
         cmd += ["--group-by", ",".join(group_by)]
+    log.info("tool.mf_query", metrics=metrics, group_by=group_by, cmd=" ".join(cmd))
     try:
         r = subprocess.run(cmd, cwd=DBT_PROJECT, capture_output=True, text=True, timeout=30)
         lines = [l for l in r.stdout.splitlines()
                  if not l.startswith(("⠋","⠙","✔","⠸","⠼","⠹","⠺","⠻"))]
-        return "\n".join(lines).strip() or r.stderr.strip()
+        result = "\n".join(lines).strip() or r.stderr.strip()
+        log.info("tool.mf_query.result", preview=result[:200])
+        return result
     except Exception as e:
+        log.error("tool.mf_query.error", error=str(e))
         return f"mf query ERROR: {e}"
 
 # ── Two-turn agent call ───────────────────────────────────────────
-def call_agent(system: str, tool: dict, tool_fn, client: OpenAI) -> str:
+def call_agent(agent_name: str, system: str, tool: dict, tool_fn, client: OpenAI) -> str:
     """Run two-turn agent: Turn 1 = tool call, Turn 2 = answer."""
+    tool_name = tool["function"]["name"]
+    log.info("agent.turn1.request",
+             agent=agent_name,
+             model=OLLAMA_MODEL,
+             tool=tool_name,
+             system_chars=len(system),
+             question=QUESTION[:80] + "...")
+
     messages = [
         {"role": "system", "content": system},
         {"role": "user",   "content": QUESTION}
@@ -184,12 +201,25 @@ def call_agent(system: str, tool: dict, tool_fn, client: OpenAI) -> str:
     )
     msg = r1.choices[0].message
 
+    # Model answered directly without a tool call
     if not msg.tool_calls:
+        log.info("agent.turn1.direct_answer", agent=agent_name,
+                 answer_chars=len(msg.content or ""))
         return msg.content or "(no answer)"
 
     tc     = msg.tool_calls[0]
     params = json.loads(tc.function.arguments)
+    log.info("agent.turn1.tool_call",
+             agent=agent_name,
+             tool=tc.function.name,
+             arguments=params)
+
     result = tool_fn(params)
+
+    log.info("agent.turn2.request",
+             agent=agent_name,
+             model=OLLAMA_MODEL,
+             tool_result_chars=len(result))
 
     messages += [
         {"role": "assistant", "content": None, "tool_calls": [tc]},
@@ -203,12 +233,18 @@ def call_agent(system: str, tool: dict, tool_fn, client: OpenAI) -> str:
         model=OLLAMA_MODEL, messages=messages,
         tools=[tool], tool_choice="none"
     )
-    return r2.choices[0].message.content or "(no answer)"
+    answer = r2.choices[0].message.content or "(no answer)"
+    log.info("agent.turn2.answer",
+             agent=agent_name,
+             answer_chars=len(answer),
+             answer_preview=answer[:120] + "..." if len(answer) > 120 else answer)
+    return answer
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 1 — Baseline: schema only
 # ─────────────────────────────────────────────────────────────────
 def agent_baseline(client: OpenAI) -> str:
+    log.info("agent.start", agent="Baseline", context_layers=["schema"])
     system = (
         "You are a data analyst. Use the SQL tool to query the capital_position table.\n"
         "IMPORTANT: Answer ONLY from the tool result. "
@@ -220,15 +256,17 @@ def agent_baseline(client: OpenAI) -> str:
         "Latest date: 2026-03-31"
     )
     tool = make_sql_tool("Query the capital_position table in DuckDB.")
-    return call_agent(system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("Baseline", system, tool, lambda p: run_sql(p["sql"]), client)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 2 — + YAML Data Contract
 # ─────────────────────────────────────────────────────────────────
 def agent_yaml(client: OpenAI) -> str:
+    log.info("agent.start", agent="+ YAML Contract", context_layers=["schema", "yaml_contract"])
     with open(YAML_CONTRACT) as f:
         contract = yaml.safe_load(f)
     ctx = json.dumps(contract, indent=2)
+    log.info("agent.context_loaded", agent="+ YAML Contract", file=YAML_CONTRACT, chars=len(ctx))
     system = (
         "You are a data analyst. Use the SQL tool to query the capital_position table.\n"
         "IMPORTANT: Answer ONLY from the tool result and the DATA CONTRACT below. "
@@ -240,15 +278,18 @@ def agent_yaml(client: OpenAI) -> str:
         "Query the capital_position table. "
         "The data contract in your system prompt describes the columns."
     )
-    return call_agent(system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("+ YAML Contract", system, tool, lambda p: run_sql(p["sql"]), client)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 3 — + ODCS Governance Contract
 # ─────────────────────────────────────────────────────────────────
 def agent_odcs(client: OpenAI) -> str:
+    log.info("agent.start", agent="+ ODCS Contract",
+             context_layers=["schema", "yaml_contract", "odcs_governance"])
     with open(ODCS_CONTRACT) as f:
         odcs = yaml.safe_load(f)
     ctx = json.dumps(odcs, indent=2)
+    log.info("agent.context_loaded", agent="+ ODCS Contract", file=ODCS_CONTRACT, chars=len(ctx))
     system = (
         "You are a data analyst with access to the full ODCS governance contract. "
         "Use the SQL tool for data. Answer governance questions from the contract.\n\n"
@@ -258,7 +299,7 @@ def agent_odcs(client: OpenAI) -> str:
         "Query the capital_position table. "
         "Use the ODCS contract in your system prompt for governance context."
     )
-    return call_agent(system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("+ ODCS Contract", system, tool, lambda p: run_sql(p["sql"]), client)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 4 — + OWL/SKOS Ontology
@@ -288,10 +329,14 @@ def load_ontology() -> str:
     return "\n\n".join(lines)
 
 def agent_ontology(client: OpenAI) -> str:
+    log.info("agent.start", agent="+ OWL/SKOS Ontology",
+             context_layers=["schema", "odcs_governance", "owl_skos_ontology"])
     with open(ODCS_CONTRACT) as f:
         odcs = yaml.safe_load(f)
     odcs_ctx = json.dumps(odcs, indent=2)
     onto_ctx = load_ontology()
+    log.info("agent.context_loaded", agent="+ OWL/SKOS Ontology",
+             odcs_chars=len(odcs_ctx), ontology_chars=len(onto_ctx))
     system = (
         "You are a Basel III capital adequacy analyst. "
         "You have governance context from an ODCS contract AND a formal domain ontology.\n\n"
@@ -304,7 +349,7 @@ def agent_ontology(client: OpenAI) -> str:
         "Table: capital_position | Latest date: 2026-03-31\n"
         "Columns: reporting_date, entity, cet1_capital_mm, rwa_mm, cet1_ratio_pct, combined_buffer"
     )
-    return call_agent(system, tool, lambda p: run_sql(p["sql"]), client)
+    return call_agent("+ OWL/SKOS Ontology", system, tool, lambda p: run_sql(p["sql"]), client)
 
 # ─────────────────────────────────────────────────────────────────
 # AGENT 5 — Full Stack (ODCS + Ontology + Metric Layer)
@@ -320,6 +365,8 @@ FULL_STACK_TURN2 = (
 )
 
 def agent_full_stack(client: OpenAI) -> str:
+    log.info("agent.start", agent="Full Stack",
+             context_layers=["schema", "odcs_governance", "owl_skos_ontology", "metric_layer"])
     with open(ODCS_CONTRACT) as f:
         odcs = yaml.safe_load(f)
     odcs_ctx = json.dumps(odcs, indent=2)
@@ -356,7 +403,15 @@ def agent_full_stack(client: OpenAI) -> str:
     def tool_fn(params):
         return run_mf(params.get("metrics", []), params.get("group_by"))
 
+    log.info("agent.context_loaded", agent="Full Stack",
+             odcs_chars=len(odcs_ctx), ontology_chars=len(onto_ctx),
+             metric_catalogue_chars=len(metric_catalogue))
+
     # Use a bespoke Turn 2 that explicitly surfaces all 5 rubric dimensions
+    log.info("agent.turn1.request", agent="Full Stack",
+             model=OLLAMA_MODEL, tool="query_metric",
+             system_chars=len(system), question=QUESTION[:80] + "...")
+
     messages = [
         {"role": "system", "content": system},
         {"role": "user",   "content": QUESTION}
@@ -367,11 +422,19 @@ def agent_full_stack(client: OpenAI) -> str:
     )
     msg = r1.choices[0].message
     if not msg.tool_calls:
+        log.info("agent.turn1.direct_answer", agent="Full Stack",
+                 answer_chars=len(msg.content or ""))
         return msg.content or "(no answer)"
 
     tc     = msg.tool_calls[0]
     params = json.loads(tc.function.arguments)
+    log.info("agent.turn1.tool_call", agent="Full Stack",
+             tool=tc.function.name, arguments=params)
+
     result = tool_fn(params)
+
+    log.info("agent.turn2.request", agent="Full Stack",
+             model=OLLAMA_MODEL, tool_result_chars=len(result))
 
     messages += [
         {"role": "assistant", "content": None, "tool_calls": [tc]},
@@ -382,7 +445,11 @@ def agent_full_stack(client: OpenAI) -> str:
         model=OLLAMA_MODEL, messages=messages,
         tools=[tool], tool_choice="none"
     )
-    return r2.choices[0].message.content or "(no answer)"
+    answer = r2.choices[0].message.content or "(no answer)"
+    log.info("agent.turn2.answer", agent="Full Stack",
+             answer_chars=len(answer),
+             answer_preview=answer[:120] + "..." if len(answer) > 120 else answer)
+    return answer
 
 # ── Scoring ───────────────────────────────────────────────────────
 def score(answer: str) -> dict:
